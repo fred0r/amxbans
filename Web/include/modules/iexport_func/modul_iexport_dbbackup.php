@@ -12,8 +12,8 @@
 	Creative Commons - Attribution-NonCommercial-ShareAlike 2.0
 
     AMXBans is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
     You should have received a copy of the cc-nC-SA along with AMXBans.  
 	If not, see <http://creativecommons.org/licenses/by-nc-sa/2.0/>.
@@ -22,6 +22,17 @@
 
 function db_backup($structur,$droptable,$deleteall,$download,$bansonly) {
 	global $config, $mysql;
+	
+		// Check/create backup directory
+		$backup_dir = "include/backup/";
+		if (!is_dir($backup_dir)) {
+			if (!mkdir($backup_dir, 0755, true)) {
+				return "_BACKUPFAILNOFILE";
+			}
+		}
+		if (!is_writable($backup_dir)) {
+			return "_BACKUPFAILNOFILE";
+		}
 	
 		// Header der Datei erstellen 
 		$datei = "########################################\n"; 
@@ -49,7 +60,7 @@ function db_backup($structur,$droptable,$deleteall,$download,$bansonly) {
 			if($droptable == true) { 
 				$datei .= "DROP TABLE IF EXISTS `" . $tab . "`;\n\n"; 
 			} 
-			// Grundlegende Informationen �ber die Struktur sammeln 
+			// Grundlegende Informationen über die Struktur sammeln 
 			$datei .= "CREATE TABLE IF NOT EXISTS `" . $tab . "` (\n"; 
 			$query = "DESCRIBE " . $tab; 
 			$sql = $mysql->query("DESCRIBE " . $tab);
@@ -64,7 +75,7 @@ function db_backup($structur,$droptable,$deleteall,$download,$bansonly) {
 				// Ende? Dann keine Kommas mehr setzen. 
 				$end++; 
 				$tab_komma = ($end<$num) ? ",\n" : ""; 
-				// Ergebnisse zu $datei hinzuf�gen 
+				// Ergebnisse zu $datei hinzufügen 
 				$datei .= " `" . $tab_name . "` " . $tab_type . $tab_null . $tab_default . $tab_extra . $tab_komma; 
 			}
 
@@ -99,34 +110,34 @@ function db_backup($structur,$droptable,$deleteall,$download,$bansonly) {
 					} else { 
 						$datei .= "KEY " . $keyname . " ("; 
 					} 
-					$datei .= implode($columns, ", ") . ")"; 
+					$datei .= implode(", ", $columns) . ")"; 
 				} 
 			}
 			$datei .= ");\n"; 
 			$datei .= "\n"; 
 			
-			// Backup der Datens�tze 
+			// Backup der Datensätze 
 			if($structur == false) {
 				if ($deleteall == true) { 
 					$datei .= "DELETE FROM `" . $tab . "`;\n\n"; 
 				} 
-				// Alle Daten der Tabelle auslesen
-				$sql = $mysql->query("SELECT * FROM `" . $tab ."`");
-				while($info = $sql->fetch_assoc()) {
-					unset($values); 
-					unset($fieldnames); 
+			// Alle Daten der Tabelle auslesen
+			$sql = $mysql->query("SELECT * FROM `" . $tab ."`");
+			while($info = $sql->fetch_assoc()) {
+				$values = ''; 
+				$fieldnames = '';
 					foreach($info as $name => $field) { 
 						$fieldnames = ($fieldnames) ? $fieldnames .= ",`" . $name ."`": "`" . $name . "`"; 
 						$values = ($values) ? $values .= ",'" . addslashes($field) . "'" : "'" . addslashes($field) . "'"; 
 					} 
-					// Formatierten String zu $datei hinzuf�gen 
+					// Formatierten String zu $datei hinzufügen 
 					$datei .= "INSERT INTO `" . $tab . "` (" . $fieldnames . ") VALUES (" . $values . ");\n"; 
 				} 
 				$datei .= "\n\n"; 
 			} 
 		} 
 		// Speicher Optionen 
-		$file_local="include/backup/" . date("Y-m-d_H-i-s") .(($bansonly)?"_bans":""). ".sql";
+		$file_local = $backup_dir . date("Y-m-d_H-i-s") .(($bansonly)?"_bans":"") . ".sql";
 		if($fp = fopen($file_local, "w")) {
 			fwrite($fp, $datei); 
 			fclose($fp); 

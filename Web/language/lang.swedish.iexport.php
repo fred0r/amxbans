@@ -34,6 +34,7 @@ define("_DBTABLE","Banntable");
 define("_CONCHECK","Kontrollera anslutning");
 define("_SET","K&ouml;r");
 define("_ONLYPERMANENT","Endast permanenta bannar");
+define("_INCHISTORY","Also import expired bans (amx_banhistory)");
 define("_DELETELOCALTABLE","Radera nuvarande bannar innan importering");
 define("_SETALLNOTIMPORTED","S&auml;tt alla bans som 'inte importerade'");
 define("_INCLUDEREASON","Inkludera anledningar");

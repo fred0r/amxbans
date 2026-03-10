@@ -34,6 +34,7 @@ define("_DBTABLE","Bani tabel");
 define("_CONCHECK","Kontrolli ühendust");
 define("_SET","Kinnita");
 define("_ONLYPERMANENT","Ainult igavesed bannid");
+define("_INCHISTORY","Also import expired bans (amx_banhistory)");
 define("_DELETELOCALTABLE","kustuta preagused banid enne importimist");
 define("_SETALLNOTIMPORTED","Sea kõik bannid 'mitte impordituks'");
 define("_INCLUDEREASON","Hõlma põhjused");

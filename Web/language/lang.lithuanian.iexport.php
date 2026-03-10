@@ -34,6 +34,7 @@ define("_DBTABLE","Banų lentelė");
 define("_CONCHECK","Patikrinti prisijungimą");
 define("_SET","Nustatyti");
 define("_ONLYPERMANENT","tik amžinus banus");
+define("_INCHISTORY","Also import expired bans (amx_banhistory)");
 define("_DELETELOCALTABLE","ištrinti dabartinius banus prieš importuojant");
 define("_SETALLNOTIMPORTED","Nustatyti visus banus į 'neimportuotus'");
 define("_INCLUDEREASON","Įtraukti priežastis");

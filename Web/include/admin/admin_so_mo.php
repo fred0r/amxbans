@@ -20,14 +20,15 @@
 
 */
 
-if(!$_SESSION["loggedin"]) {
+if(!$_SESSION["loggedin"] || $_SESSION['websettings_edit']!="yes") {
 	header("Location:index.php");
+	exit;
 }
 
 $admin_site="mo";
 $title2 ="_TITLEMODULE";
 
-$mid=(int)$_POST["mid"];
+$mid = isset($_POST["mid"]) ? (int)$_POST["mid"] : 0;
 
 //save module
 if(isset($_POST["save"]) && $_SESSION["loggedin"]) {
@@ -44,7 +45,6 @@ if(isset($_POST["save"]) && $_SESSION["loggedin"]) {
 //get all modules
 $modules2=sql_get_modules(0,$tmp);
 
-$smarty->assign("modules_menu_count",$modules_menu_count);
 $smarty->assign("modules2",$modules2);
 	
 ?>

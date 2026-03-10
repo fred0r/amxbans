@@ -55,10 +55,11 @@
 		{if $smarty.session.bans_import == "yes" || $smarty.session.bans_export == "yes"}
 			<span class="title">{"_DATAIMPORTEXPORT"|lang}</span>
 			<table width="50%"><tr><td>
-				{if $smarty.session.bans_import == "yes" && $smarty.session.bans_export == "yes"}
+				{if $smarty.session.bans_export == "yes"}
 				<table border="1" width="100%">
 					<tr class="htable"><td colspan="2"><b>{"_DATABASE"|lang}</b></td></tr>
 					<form method="POST">
+					<input type="hidden" name="csrf_token" value="{$csrf_token}">
 					<tr class="settings_line">
 						<td valign="top">&nbsp;<b>{"_LOCALBACKUPS"|lang}:</b><br /> &nbsp;<select name="localfile" style="width: 200px;">{html_options values=$backups output=$backups}</select></td>
 						<td width="1%">
@@ -71,6 +72,7 @@
 						<td colspan="2"><b>{"_BACKUPALL"|lang}</b></td>
 					</tr>
 					<form method="POST">
+					<input type="hidden" name="csrf_token" value="{$csrf_token}">
 					<tr class="settings_line">
 						<td>
 							<input type="checkbox" name="structur" /> {"_ONLYSTRUCTUR"|lang}<br />
@@ -85,6 +87,7 @@
 						<td colspan="2"><b>{"_BACKUPBANS"|lang}</b></td>
 					</tr>
 					<form method="POST">
+					<input type="hidden" name="csrf_token" value="{$csrf_token}">
 					<tr class="settings_line">
 						<td>
 							<input type="checkbox" name="download" /> {"_DOWNLOADAFTER"|lang}
@@ -104,6 +107,7 @@
 							<td colspan="2">{"_IMP_FILE"|lang}</td>
 						</tr>
 						<form name="bannedcfg" method="POST" enctype="multipart/form-data">
+						<input type="hidden" name="csrf_token" value="{$csrf_token}">
 						<tr class="settings_line">
 							<td>
 								&nbsp;<input size="32" type="text" name="reason" value="{"_IMPORT"|lang}" /> {"_REASON"|lang}<br />
@@ -138,9 +142,11 @@
 								&nbsp;<input size="32" type="password" name="impdbpw" value="{if $dbdata}{$dbdata.pass}{/if}"  {if $dbcheck == "OK"}disabled="disabled"{/if} /> {"_DBPASSWORD"|lang}<br />
 								&nbsp;<input size="32" type="text" name="impdbdb" value="{if $dbdata}{$dbdata.database}{else}amxbans{/if}"  {if $dbcheck == "OK"}disabled="disabled"{/if} /> {"_DBDATABASE"|lang}<br />
 								&nbsp;<input size="32" type="text" name="impdbtable" value="{if $dbdata}{$dbdata.table}{else}amx_bans{/if}"  {if $dbcheck == "OK"}disabled="disabled"{/if} /> {"_DBTABLE"|lang}<br />
-								<input type="checkbox" name="onlyperm" {if $dbdata.onlyperm}checked{/if} /> {"_ONLYPERMANENT"|lang}<br />
-								<input type="checkbox" name="dellocal" {if $dbdata.dellocal}checked{/if} /> {"_DELETELOCALTABLE"|lang}<br />
-							</td>
+							<input type="checkbox" name="onlyperm" {if $dbdata.onlyperm}checked{/if} /> {"_ONLYPERMANENT"|lang}<br />
+							<input type="checkbox" name="inchistory" {if $dbdata.inchistory}checked{/if} /> {"_INCHISTORY"|lang}<br />
+							<input type="checkbox" name="dellocal" {if $dbdata.dellocal}checked{/if} /> {"_DELETELOCALTABLE"|lang}<br />
+							<input type="hidden" name="csrf_token" value="{$csrf_token}">
+						</td>
 							<td width="1%" valign="bottom">
 								{if $dbcheck == "OK"}<img src="images/success.gif" />{/if}
 								<input type="submit" class="button" name="bandbcheck" value="{"_CONCHECK"|lang}" {if $dbcheck == "OK"}disabled="disabled"{/if} />
@@ -150,16 +156,19 @@
 						</tr>
 						<tr class="settings_line">
 							<td>&nbsp;{"_DELALLIMPORTED"|lang} {if $importcount >= 0}<b>({$importcount})</b>{/if}</td>
-							<td width="1%" valign="bottom"><input type="submit" class="button" name="delimport" onclick="return confirm('{"_DELIMPORT"|lang}{"_DATALOSS"|lang}');" value="{"_DELETE"|lang}" {if $importcount == 0}disabled="disabled"{/if}/></td>
+							<td width="1%" valign="bottom"><input type="submit" class="button" name="delimport" onclick="return confirm('{"_DELIMPORT"|lang}{"_DATALOSS"|lang}');" value="{"_DELETE"|lang}" {if $importcount == 0}disabled="disabled"{/if}/>
+							<input type="hidden" name="csrf_token" value="{$csrf_token}"></td>
 						</tr>
 						<tr class="settings_line">
 							<td>&nbsp;{"_SETALLNOTIMPORTED"|lang}</td>
-							<td width="1%" valign="bottom"><input type="submit" class="button" name="setnotimported" onclick="return confirm('{"_SETIMPORT"|lang}');" value="{"_SET"|lang}" /></td>
+							<td width="1%" valign="bottom"><input type="submit" class="button" name="setnotimported" onclick="return confirm('{"_SETIMPORT"|lang}');" value="{"_SET"|lang}" />
+							<input type="hidden" name="csrf_token" value="{$csrf_token}"></td>
 						</tr>
 						</form>
 					{/if}
 					{if $smarty.session.bans_export == "yes"}
 					<form method="POST">
+					<input type="hidden" name="csrf_token" value="{$csrf_token}">
 					<tr class="htable">
 						<td colspan="2">{"_EXP_FILE"|lang}</td>
 					</tr>

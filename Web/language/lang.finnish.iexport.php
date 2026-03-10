@@ -34,6 +34,7 @@ define("_DBTABLE","Bannitaulukko");
 define("_CONCHECK","Tarkista yhteys");
 define("_SET","Aseta");
 define("_ONLYPERMANENT","Vain pysyv&auml;t bannit");
+define("_INCHISTORY","Also import expired bans (amx_banhistory)");
 define("_DELETELOCALTABLE","poista nykyiset bannit ennen tuontia");
 define("_SETALLNOTIMPORTED","Aseta kaikki bannit ''ei-tuoduiksi''");
 define("_INCLUDEREASON","Lis&auml;&auml; syyt");

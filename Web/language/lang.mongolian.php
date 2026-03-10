@@ -405,7 +405,7 @@ define("_SELECTSERVER","Сээвэрээ сонго");
 define("_ADDHLSW","HLSW уруу нэмэх");
 define("_CONNECT","Холбогдох");
 define("_NUMBER","#");
-define("_FRAGS","Фраг";
+define("_FRAGS","Фраг");
 define("_ONLINE","Хугацаа");
 define("_ADDRESS","Хаяг");
 define("_MAP","Зам");

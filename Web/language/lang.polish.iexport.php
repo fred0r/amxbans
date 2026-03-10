@@ -47,6 +47,7 @@ define("_DBTABLE","Tabela ban&#243w");
 define("_CONCHECK","Sprawd&#378 po&#322&#261czenie");
 define("_SET","Ustaw");
 define("_ONLYPERMANENT","Tylko bany permanentne");
+define("_INCHISTORY","Also import expired bans (amx_banhistory)");
 define("_DELETELOCALTABLE","Usu&#324 obecne bany przed importowaniem");
 define("_SETALLNOTIMPORTED","Ustaw wszystkie bany jako 'Nie do importowania'");
 define("_INCLUDEREASON","Dodaj pow&#243d");

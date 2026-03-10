@@ -5,6 +5,7 @@
 			</tr>
 			<tr><td colspan="2">
 				<form name="demoupload" method="post" enctype="multipart/form-data">
+								<input type="hidden" name="csrf_token" value="{$csrf_token}">
 					<table width="100%" class="table_details" border="1">
 						<input type="hidden" name="bid" value="{$ban_detail.bid}" />
 						<input type="hidden" name="site" value="{$site}" />
@@ -26,14 +27,14 @@
 						<tr>
 							<td class="vtop fat">{"_COMMENT"|lang}:</td>
 							<td>
-								{foreach from=$bbcodes item=bbcodes}
-									<a href="javascript:insertAtCaret('commentd', '{$bbcodes.0} {$bbcodes.1}');"><img border="0" src="images/icons/bbcode/{$bbcodes.2}" title="{$bbcodes.3}" /></a>
+								{foreach from=$bbcodes item=bbcode}
+									<a href="javascript:insertAtCaret('commentd', '{$bbcode.0} {$bbcode.1}');"><img border="0" src="images/icons/bbcode/{$bbcode.2}" title="{$bbcode.3}" /></a>
 								{/foreach}
 								<br />
 									<textarea name="comment" id="commentd" cols="50" rows="3" wrap="soft"></textarea>
 								<br />
-								{foreach from=$smilies item=smilies}
-									<a href="javascript:insertAtCaret('commentd', ' {$smilies.0} ');"><img border="0" src="images/icons/{$smilies.1}" title="{$smilies.2}" /></a>
+								{foreach from=$smilies item=smilie}
+									<a href="javascript:insertAtCaret('commentd', ' {$smilie.0} ');"><img border="0" src="images/icons/{$smilie.1}" title="{$smilie.2}" /></a>
 								{/foreach}
 							</td>
 						</tr>

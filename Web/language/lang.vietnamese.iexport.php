@@ -34,6 +34,7 @@ define("_DBTABLE","Bảng cấm");
 define("_CONCHECK","Kiểm tra kết nối");
 define("_SET","Thiết lập");
 define("_ONLYPERMANENT","Chỉ cấm mãi mãi");
+define("_INCHISTORY","Also import expired bans (amx_banhistory)");
 define("_DELETELOCALTABLE","xóa những danh sách cấm hiện tại trước khi nhập vào");
 define("_SETALLNOTIMPORTED","Thiết lập tất cả danh sách cấm 'không được nhập vào'");
 define("_INCLUDEREASON","Gồm các lý do");

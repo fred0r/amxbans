@@ -34,6 +34,7 @@ define("_DBTABLE","Tabelul cu banuri");
 define("_CONCHECK","Verificã conexiunea");
 define("_SET","Seteazã");
 define("_ONLYPERMANENT","numai banurile permanente");
+define("_INCHISTORY","Also import expired bans (amx_banhistory)");
 define("_DELETELOCALTABLE","șterge banurile curente înainte de a importa");
 define("_SETALLNOTIMPORTED","Seteazã toate banurile cu eticheta 'ne-importate'");
 define("_INCLUDEREASON","Include motivul banãrii");

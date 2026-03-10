@@ -56,6 +56,7 @@
 	<div class="post">
 	{if $smarty.session.bans_add=="yes"}
 	<form method="post">
+								<input type="hidden" name="csrf_token" value="{$csrf_token}">
 		<table frame="box" rules="groups" summary=""> 
 			<thead> 
 				<tr>

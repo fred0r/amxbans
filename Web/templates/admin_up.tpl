@@ -1,3 +1,6 @@
+{assign var="web" value=false}
+{assign var="plugin" value=false}
+
 <div id="navigation">
 	<div id="main-nav">
 		<ul class="tabbed">
@@ -56,6 +59,7 @@
 			<table width="95%"><tr><td>
 				<table border="1" width="100%">
 				<form method="POST">
+								<input type="hidden" name="csrf_token" value="{$csrf_token}">
 				<table border="1" width="100%">
 					<tr class="htabletop">
 						<td colspan="3"><b>{"_WEBVERSIONINFO"|lang}</b></td>
@@ -68,7 +72,7 @@
 					<tr class="settings_line">
 						<td><b>{"_YOURWEB"|lang}</b></td>
 						<td>
-							{if $latest_version>$version_web}
+							{if $version_latest>$version_web}
 								<span style="color:orange;font-weight:bold">{$version_web}</span>
 								{assign var="web" value=true}
 								<img src="images/warning.gif" title="{"_UPDATE_RECOMMENDED"|lang}" />
@@ -84,6 +88,7 @@
 			</table>
 			<table width="95%"><tr><td width="49%" valign="top">
 				<form method="POST">
+								<input type="hidden" name="csrf_token" value="{$csrf_token}">
 				<table border="1" width="100%">
 					<tr class="htabletop">
 						<td colspan="4"><b>{"_PLUGINVERSIONINFO"|lang}</b></td>
@@ -99,16 +104,16 @@
 							<td>{$version_latest}</td>
 						</tr>
 					{else}
-						{foreach from=$version_server item=version_server}
+						{foreach from=$version_server item=version_server_i}
 						<tr>
-							<td>{$version_server.address}</td>
+							<td>{$version_server_i.address}</td>
 							<td>
-								{if $version_latest>$version_server.version}
-									<span style="color:orange;font-weight:bold">{$version_server.version}</span>
+								{if $version_latest>$version_server_i.version}
+									<span style="color:orange;font-weight:bold">{$version_server_i.version}</span>
 									{assign var="plugin" value=true}
 									<img src="images/warning.gif" title="{"_UPDATE_RECOMMENDED"|lang}" />
 								{else}
-									<span style="color:green;font-weight:bold">{$version_server.version}</span>
+									<span style="color:green;font-weight:bold">{$version_server_i.version}</span>
 									<img src="images/success.gif" title="{"_UPDATE_NOTNEEDED"|lang}" />
 								{/if}
 							</td>
@@ -121,9 +126,6 @@
 			</table>
 			{if $web==true}<center><div class="notice"><img src="images/warning.gif" alt="" border="0" /> <a href="http://www.amxbans.net/dl.php?f={$version_latest}" target="_blank">{"_WEBUPDATE_RECOMMENDED"|lang}</a></div></center>{/if}
 			{if $plugin==true}<center><div class="notice"><img src="images/warning.gif" alt="" border="0" /> <a href="http://www.amxbans.net/dl.phpf={$version_latest}" target="_blank">{"_PLUGINUPDATE_RECOMMENDED"|lang}</a></div></center>{/if}
-			{foreach from=$error item=error}
-				<div class="error">{$error|lang}</div>
-			{/foreach}
 			<br />
 		{else}
 			<center><div class="admin_msg">{"_NOACCESS"|lang}</div></center>

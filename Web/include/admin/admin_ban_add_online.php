@@ -19,15 +19,22 @@
 	If not, see <http://creativecommons.org/licenses/by-nc-sa/2.0/>.
 
 */
-require_once("include/rcon_hl_net.inc");
+	require_once("include/rcon_hl_net.inc");
 	
-	if(!$_SESSION["loggedin"]) {
+	if(!$_SESSION["loggedin"] || $_SESSION['bans_add']!="yes") {
 		header("Location:index.php");
+		exit;
 	}
 
 	$admin_site="ban_add_online";
 	$title2 = "_TITLEBANADDONLINE";
-	
+	$smsg = "";
+	$user_msg = "";
+	$server_msg = "";
+	$playerscount = 0;
+	$count = 0;
+	$players = array();
+
 	if(isset($_POST["server"])) {
 		$sid=(int)$_POST["server"];
 	} else {
@@ -37,33 +44,51 @@ require_once("include/rcon_hl_net.inc");
 	//get servers
 	$servers_array = array();
 	$resource = $mysql->query("SELECT * FROM ".$config->db_prefix."_serverinfo ORDER BY hostname ASC") or die ($mysql->error);
-	while($result = $resource->fetch_object()) {
-		$servers_list[] = $result->id;
-		$key = array_keys($servers_list);
-		$count = count($key);
-		
+	while( $result = $resource->fetch_object() )
+	{
 		//get some info
 		$server = new Rcon();
 		$server_address=explode(":",trim($result->address));
 		$server->Connect($server_address[0],$server_address[1], $result->rcon);
 		$infos = $server->Info();
 		$server->Disconnect();
-		for ($i=0; $i<$count; $i++) {
-			$servers_info = array(
-				"id"		=> $key[$i],
-				"hostname"	=> $result->hostname,
-				"address"	=> $result->address,
-				"rcon"		=> $result->rcon,
-				"map"         => $infos[map],
-				"mod"        	=> $infos[mod],
-				"os"		=> ($infos[os]=="l")?"Linux":"Windows",
-				"cur_players"	=> $infos[activeplayers], 
-				"max_players"	=> $infos[maxplayers],
-				"bot_players"	=> $infos[botplayers]
-			);
+
+		if( !$infos )
+		{
+			$infos = array();
 		}
+
+		$servers_info = array(
+			"id"          => count($servers_array),
+			"hostname"    => $result->hostname,
+			"address"     => $result->address,
+			"rcon"        => $result->rcon,
+			"map"         => array_key_exists('map', $infos) ? $infos['map'] : "",
+			"mod"         => array_key_exists('mod', $infos) ? $infos['mod'] : "",
+			"os"          => array_key_exists('os', $infos) ? ($infos['os']=="l")?"Linux":"Windows" : "",
+			"cur_players" => array_key_exists('activeplayers', $infos) ? $infos['activeplayers'] : "",
+			"max_players" => array_key_exists('maxplayers', $infos) ? $infos['maxplayers'] : "",
+			"bot_players" => array_key_exists('botplayers', $infos) ? $infos['botplayers'] : ""
+		);
 		$servers_array[] = $servers_info;
 	}
+
+	if( count($servers_array) == 0 )
+	{
+		$servers_array[] = array(
+			"id"		=> 0,
+			"hostname"	=> "",
+			"address"	=> "",
+			"rcon"		=> "",
+			"map"         => "",
+			"mod"        	=> "",
+			"os"		=> "n/a",
+			"cur_players"	=> 0,
+			"max_players"	=> 0,
+			"bot_players"	=> 0
+		);
+	}
+
 	//address for $sid exists?
 	if(!isset($servers_array[$sid]["address"])) $sid=0;
 	$hostname=$servers_array[$sid]["hostname"];
@@ -82,16 +107,17 @@ require_once("include/rcon_hl_net.inc");
 	$smarty->assign("banby_values",$banby_values);
 	
 	//ban or kick a player, get the vars
-	if((isset($_POST["ban"]) || isset($_POST["kick"])) && $servers_array[$sid]["address"] != "") {
+	if( (isset($_POST["ban"]) || isset($_POST["kick"])) && $servers_array[$sid]["address"] != "" )
+	{
 		$pl_name = sql_safe($_POST["player_name"]);
 		$pl_uid = (int)$_POST["player_uid"];
 		$pl_steamid = sql_safe($_POST["player_steamid"]);
 		$pl_ip = sql_safe($_POST["player_ip"]);
-		$pl_ban_reason = sql_safe($_POST["ban_reason"]);
+		$pl_ban_reason = sql_safe(isset($_POST["ban_reason"]) ? $_POST["ban_reason"] : "");
 		$pl_user_reason = sql_safe($_POST["user_reason"]);
-		$pl_ban_length = (int)$_POST["ban_length"];
-		$pl_perm = ($_POST["perm"]=="on") ? true:false;
-		$pl_silent = ($_POST["silent"]=="on") ? false:true;
+		$pl_ban_length = (int)(isset($_POST["ban_length"]) ? $_POST["ban_length"] : 0);
+		$pl_perm = ((isset($_POST["perm"]) ? $_POST["perm"] : "") == "on") ? true : false;
+		$pl_silent = ((isset($_POST["silent"]) ? $_POST["silent"] : "") == "on") ? false : true;
 		//some var checks
 		$steamid_valid = (preg_match("/^STEAM_0:(0|1):[0-9]{1,10}$/",$pl_steamid)) ? true : false;
 		$ip_valid = (preg_match("/^[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}$/",$pl_ip)) ? true : false;
@@ -100,80 +126,105 @@ require_once("include/rcon_hl_net.inc");
 		$pl_reason=($pl_user_reason) ? $pl_user_reason : $pl_ban_reason;
 		if(!$pl_reason) $user_msg="_NOREASON";
 	}
+	
 	//ban a player
-	if(isset($_POST["ban"]) && $servers_array[$sid]["address"] != "" && !$user_msg) {
+	if( isset($_POST["ban"]) && $servers_array[$sid]["address"] != "" && !$user_msg )
+	{
 		//get bantime
-		$time=($pl_perm)?0:(($pl_ban_length >= 0) ? $pl_ban_length : 0);
+		$time = $pl_perm ? 0 : (($pl_ban_length >= 0) ? $pl_ban_length : 0);
 		//get and check the ban type
 		$type = $_POST["ban_type"];
 		
-		if(!$steamid_valid && $type=="S") $user_msg="_STEAMIDINVALID";
-		if(!$ip_valid && $type=="SI") $user_msg="_IPINVALID";
+		if( !$steamid_valid && $type == "S" ) $user_msg="_STEAMIDINVALID";
+		if( !$ip_valid && $type == "SI" ) $user_msg="_IPINVALID";
 		
-		if($pl_silent) {
+		if( $pl_silent )
+		{
 			//if banning silent, only add the ban to the db
-			if(!$user_msg) {
+			if( !$user_msg )
+			{
 				$query = $mysql->query("INSERT INTO `".$config->db_prefix."_bans` 
 						(`player_ip`,`player_id`,`player_nick`,`admin_nick`,`admin_id`,`ban_type`,`ban_reason`,`ban_created`,`ban_length`,`server_name`) 
 						VALUES 
 						('".$pl_ip."','".$pl_steamid."','".$pl_name."','".$_SESSION["uname"]."','".$_SESSION["uname"]."','".$type."','".$pl_reason."',UNIX_TIMESTAMP(),'".$pl_ban_length."','website')
 						") or die ($mysql->error);
-				$user_msg='_BANADDSUCCESS';
+				$user_msg = '_BANADDSUCCESS';
 				log_to_db("Add ban online","nick: ".$pl_name." <".$pl_steamid."><".$pl_ip."> banned for ".$pl_ban_length." minutes");	
 			}
-		} else {
-			if(!$user_msg) {
-				$server_address=explode(":",trim($servers_array[$sid]["address"]));
+		}
+		else
+		{
+			if( !$user_msg )
+			{
+				$server_address = explode(":", trim($servers_array[$sid]["address"]));
 				$server = new Rcon();
-				if($server->Connect($server_address[0],$server_address[1], $servers_array[$sid]["rcon"])) {
+				if( $server->Connect($server_address[0], $server_address[1], $servers_array[$sid]["rcon"]) )
+				{
 					//send ban cmd with rcon
 					$response = $server->RconCommand("amx_ban #".$pl_uid." ".$time." ".$pl_reason);
-					if(substr($response,1)!="") {
+					if( substr($response, 1) != "" )
+					{
 						$user_msg='_ADDBANSUCCESSKICK';
 						log_to_db("Add ban online","nick: ".$pl_name." <".$pl_steamid."><".$pl_ip."> banned for ".$pl_ban_length." minutes");
 					}
 					//$server_msg=substr($response,1); //for debug, shows the response from server
 					$server->Disconnect();
-					
 				}
 			}
 		}
 	}
+	
 	//kick a player
-	if(isset($_POST["kick"]) && $servers_array[$sid]["address"] != "") {
+	if( isset($_POST["kick"]) && $servers_array[$sid]["address"] != "" )
+	{
 		$server_msg = "";
-		$server_address=explode(":",trim($servers_array[$sid]["address"]));
+		$server_address = explode(":", trim($servers_array[$sid]["address"]));
 		$server = new Rcon();
-		if($server->Connect($server_address[0],$server_address[1], $servers_array[$sid]["rcon"])) {
+		if( $server->Connect($server_address[0], $server_address[1], $servers_array[$sid]["rcon"]) )
+		{
 			$response = $server->RconCommand("kick #".$pl_uid." ".$pl_reason);
-			if(substr($response,1)!="") {
+			if( substr($response, 1) != "" )
+			{
 				$user_msg="_PLAYERKICKED";
 				log_to_db("Kick online","nick: ".$pl_name." <".$pl_steamid."><".$pl_ip."> kicked");
 			}
-			$server_msg=$servers_array[$sid]["address"]."<br>".substr($response,1); //for debug, shows the response from server
+			$server_msg=$servers_array[$sid]["address"]."<br>".substr($response, 1); //for debug, shows the response from server
 			$server->Disconnect();
-			
 		}
-		
 	}
 	
-	if($servers_array[$sid]["mod"]) {
+	if($servers_array[$sid]["mod"])
+	{
 		//get player list sent by plugin
 		$server_address=explode(":",trim($servers_array[$sid]["address"]));
 		$server = new Rcon();
-		if($server->Connect($server_address[0],$server_address[1], $servers_array[$sid]["rcon"])) {
+		if( $server->Connect($server_address[0],$server_address[1], $servers_array[$sid]["rcon"]) )
+		{
 			$response = $server->ServerPlayers();
 
 			//explode packet and get infos
 			$re=explode("\x0A",$response);
 			
 			//there is a response from amxmodx plugin
-			if(strlen($response)) {
-				if ($re[0]!="Bad rcon_password." && $re[1]!="Bad rcon_password." && $re[2]!="Bad rcon_password.") {
-					foreach($re as $k=>$v) {
+			if( strlen($response) )
+			{
+				$badRcon = false;
+				foreach( $re as $resp )
+				{
+					if( str_contains(strtolower($resp), "bad") && str_contains(strtolower($resp), "rcon_password") )
+					{
+						$badRcon = true;
+					}
+				}
+				
+				if( !$badRcon )
+				{
+					foreach($re as $k=>$v)
+					{
 						$pl=explode("\xFC",$v);
-						if(!is_array($pl)) break;
-						switch ($pl[4]) {
+						if(!is_array($pl) || count($pl) < 6) continue; // Skip if array doesn't have enough elements
+						switch (isset($pl[4]) ? $pl[4] : -1)
+						{
 							case 0:
 								$statusname="_PLAYER";break;
 							case 1:
@@ -184,31 +235,36 @@ require_once("include/rcon_hl_net.inc");
 								$statusname="_UNKNOWN";break;
 						}
 						$player=array(
-							"name"=>htmlspecialchars($pl[0]),
-							"userid"=>$pl[1],
-							"steamid"=>$pl[2],
-							"ip"=>$pl[3],
-							"status"=>$pl[4],
-							"immunity"=>$pl[5],
+							"name"=>htmlspecialchars(isset($pl[0]) ? $pl[0] : ""),
+							"userid"=>isset($pl[1]) ? $pl[1] : "",
+							"steamid"=>isset($pl[2]) ? $pl[2] : "",
+							"ip"=>isset($pl[3]) ? $pl[3] : "",
+							"status"=>isset($pl[4]) ? $pl[4] : "",
+							"immunity"=>isset($pl[5]) ? $pl[5] : "",
 							"statusname"=>$statusname,
 							);
 						$count++;
 						$players[]=$player;
 					}
-					$smarty->assign("playerscount",$count);
-					$smarty->assign("players",$players);
+					$playerscount = $count;
 					$smarty->assign("players_sid",$sid);
-				} else {
+				}
+				else
+				{
 					$smsg="_WRONGRCON";
 				}
 			}
 			$server->Disconnect();
 		}
-	} else {
+	}
+	else
+	{
 		$smsg="_SERVEROFFLINE";
 	}
 	//close connection
 	
+	$smarty->assign("playerscount",$count);
+	$smarty->assign("players",$players);
 	$smarty->assign("smsg",$smsg);
 	$smarty->assign("user_msg",$user_msg);
 	$smarty->assign("server_msg",$server_msg);

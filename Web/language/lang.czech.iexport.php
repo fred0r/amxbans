@@ -34,6 +34,7 @@ define("_DBTABLE","Tabulka banù");
 define("_CONCHECK","Zkontrolovat pøipojení");
 define("_SET","Nastavit");
 define("_ONLYPERMANENT","pouze permanentní bany");
+define("_INCHISTORY","Also import expired bans (amx_banhistory)");
 define("_DELETELOCALTABLE","smazat momentální bany pøed importováním");
 define("_SETALLNOTIMPORTED","Nastavit všechny bany aby nebyly importovány");
 define("_INCLUDEREASON","Pøidat dùvody");

@@ -34,6 +34,7 @@ define("_DBTABLE","Бан таблица");
 define("_CONCHECK","Провери връзката");
 define("_SET","Постави");
 define("_ONLYPERMANENT","само перманентните Банове");
+define("_INCHISTORY","Also import expired bans (amx_banhistory)");
 define("_DELETELOCALTABLE","изтрйите сегашните банове преди добавяне");
 define("_SETALLNOTIMPORTED","Поставете всички банове като 'недобавени' ");
 define("_INCLUDEREASON","Добавете причини");

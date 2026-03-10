@@ -28,7 +28,7 @@ function sql_set_websettings() {
 	$result = $query->fetch_object();
 
 	$config->cookie=$result->cookie;
-	$config->bans_per_page=($result->bans_per_page)<1 ? 1:$result->bans_per_page;
+	$config->bans_per_page=($result->bans_per_page)<1 ? 1:(int)$result->bans_per_page;
 	$config->design = $result->design;
 	$config->banner = $result->banner;
 	$config->banner_url = $result->banner_url;
@@ -47,6 +47,7 @@ function sql_set_websettings() {
 	$config->max_offences_reason = $result->max_offences_reason;
 	$config->use_demo = $result->use_demo;
 	$config->use_comment = $result->use_comment;
+	$config->show_admin_public = isset($result->show_admin_public) ? $result->show_admin_public : 0;
 	//set vars to an array
 	$vars=array(
 			"cookie"=>trim($config->cookie),
@@ -68,14 +69,18 @@ function sql_set_websettings() {
 			"max_offences" => (int)$config->max_offences,
 			"max_offences_reason" => $config->max_offences_reason,
 			"use_demo" => (int)$result->use_demo,
-			"use_comment" => $result->use_comment
+			"use_comment" => $result->use_comment,
+			"show_admin_public" => (int)$config->show_admin_public
 		);
 	return $vars;
 }
 function sql_get_server($serverid=0) {
 	global $config, $mysql;
 	if($serverid) {
-		$query = $mysql->query("SELECT * FROM `".$config->db_prefix."_serverinfo` WHERE `id`=".$serverid." LIMIT 1") or die ($mysql->error);
+		$stmt = $mysql->prepare("SELECT * FROM `".$config->db_prefix."_serverinfo` WHERE `id`=? LIMIT 1");
+		$stmt->bind_param("i", $serverid);
+		$stmt->execute();
+		$query = $stmt->get_result();
 	} else {
 		$query = $mysql->query("SELECT * FROM `".$config->db_prefix."_serverinfo` ORDER BY `address` ASC") or die ($mysql->error);
 		$servers=array();
@@ -118,14 +123,18 @@ function sql_get_reasons_set() {
 			"id"=>$result->id,
 			"setname"=>html_safe($result->setname)
 			);
-		$query2 = $mysql->query("SELECT * FROM `".$config->db_prefix."_reasons_to_set` WHERE `setid`=".$result->id) or die ($mysql->error);
+	$query2 = $mysql->prepare("SELECT * FROM `".$config->db_prefix."_reasons_to_set` WHERE `setid`=?");
+		$query2->bind_param("i", $result->id);
+		$query2->execute();
+		$query2_result = $query2->get_result();
 		$reasons="";
-		while($result2 = $query2->fetch_object()) {
+		while($result2 = $query2_result->fetch_object()) {
 			$reasons.=($reasons)?",".$result2->reasonid:$result2->reasonid;
 		}
 		$reason_set["reasonids"]=$reasons;
 		$reasons_set[]=$reason_set;
 	}
+	$query2_result->free();
 	return $reasons_set;
 }
 function sql_get_reasons() {
@@ -205,7 +214,10 @@ function sql_get_amxadmins_server($server) {
 	$query = $mysql->query("SELECT * FROM `".$config->db_prefix."_amxadmins` ORDER BY `ashow` DESC,`expired`,`access` DESC,`username` ASC") or die ($mysql->error);
 	$admins=array();
 	while($result = $query->fetch_object()) {
-		$query2 = $mysql->query("SELECT `custom_flags`,`use_static_bantime` FROM `".$config->db_prefix."_admins_servers` WHERE `admin_id`=".$result->id." AND `server_id`=".$server) or die ($mysql->error);
+		$stmt = $mysql->prepare("SELECT `custom_flags`,`use_static_bantime` FROM `".$config->db_prefix."_admins_servers` WHERE `admin_id`=? AND `server_id`=?");
+		$stmt->bind_param("ii", $result->id, $server);
+		$stmt->execute();
+		$query2 = $stmt->get_result();
 		if($result2 = $query2->fetch_object()) {
 				$custom_flags=$result2->custom_flags;
 				$static_bantime=$result2->use_static_bantime;
@@ -254,7 +266,10 @@ function sql_get_webadmins() {
 function sql_get_server_admins($server) {
 	global $config, $mysql;
 	$serveradmins=array();
-	$query = $mysql->query("SELECT s.admin_id,s.custom_flags,s.use_static_bantime,a.username FROM ".$config->db_prefix."_admins_servers as s,".$config->db_prefix."_amxadmins as a WHERE s.server_id=".$server) or die ($mysql->error);
+	$stmt = $mysql->prepare("SELECT s.admin_id,s.custom_flags,s.use_static_bantime,a.username FROM ".$config->db_prefix."_admins_servers as s,".$config->db_prefix."_amxadmins as a WHERE s.server_id=? AND s.admin_id=a.id");
+	$stmt->bind_param("i", $server);
+	$stmt->execute();
+	$query = $stmt->get_result();
 	$admins=array();
 	while($result = $query->fetch_object()) {
 		$admin=array(
@@ -316,15 +331,13 @@ function sql_get_modules($aktiv_only=0,&$count) {
 }
 function sql_get_ban_details($bid) {
 	global $config, $mysql;
-	//banns for ID
-	#$query = $mysql->query("SELECT ba.*, se.gametype,se.timezone_fixx, aa.nickname, wa.username FROM `".$config->db_prefix."_bans` AS ba 
-	#			LEFT JOIN `".$config->db_prefix."_serverinfo` AS se ON ba.server_ip=se.address 
-	#			LEFT JOIN `".$config->db_prefix."_amxadmins` AS aa ON (aa.steamid=ba.admin_nick OR aa.steamid=ba.admin_ip OR aa.steamid=ba.admin_id) 
-	#			LEFT JOIN `".$config->db_prefix."_webadmins` AS wa ON wa.username=ba.admin_nick WHERE ba.bid=".$bid." LIMIT 1") or die ($mysql->error);
-	$query = $mysql->query("SELECT ba.*, se.gametype,se.timezone_fixx, aa.nickname,aa.username FROM `".$config->db_prefix."_bans` AS ba 
+	$stmt = $mysql->prepare("SELECT ba.*, se.gametype,se.timezone_fixx, aa.nickname,aa.username FROM `".$config->db_prefix."_bans` AS ba 
 				LEFT JOIN `".$config->db_prefix."_serverinfo` AS se ON ba.server_ip=se.address 
 				LEFT JOIN `".$config->db_prefix."_amxadmins` AS aa ON (aa.steamid=ba.admin_nick OR aa.steamid=ba.admin_ip OR aa.steamid=ba.admin_id) 
-				WHERE ba.bid=".$bid." LIMIT 1") or die ($mysql->error);
+				WHERE ba.bid=? LIMIT 1");
+	$stmt->bind_param("i", $bid);
+	$stmt->execute();
+	$query = $stmt->get_result();
 	//Array aufbereiten
 	$ban_row=$query->fetch_assoc();
 	//timezone fixx and ban_end calc
@@ -336,10 +349,12 @@ function sql_get_ban_details($bid) {
 }
 function sql_get_ban_details_activ($steamid,&$count,$bid) {
 	global $config, $mysql;
-	//banns for ID without $bid
-	$query = $mysql->query("SELECT ba.*,se.timezone_fixx FROM `".$config->db_prefix."_bans` AS ba 
+	$stmt = $mysql->prepare("SELECT ba.*,se.timezone_fixx FROM `".$config->db_prefix."_bans` AS ba 
 				LEFT JOIN `".$config->db_prefix."_serverinfo` AS se ON ba.server_ip=se.address
-				WHERE `player_id`='".$steamid."' AND `expired`=0 AND `bid`<>".$bid) or die ($mysql->error);
+				WHERE `player_id`=? AND `expired`=0 AND `bid`<>?");
+	$stmt->bind_param("si", $steamid, $bid);
+	$stmt->execute();
+	$query = $stmt->get_result();
 	//Array aufbereiten
 	$ban_rows=array();
 	while($ban_row=$query->fetch_assoc()) {
@@ -353,10 +368,12 @@ function sql_get_ban_details_activ($steamid,&$count,$bid) {
 }
 function sql_get_ban_details_exp($steamid,&$count,$bid) {
 	global $config, $mysql;
-	//exp bans for ID without $bid
-	$query = $mysql->query("SELECT ba.*,se.timezone_fixx FROM `".$config->db_prefix."_bans` AS ba 
+	$stmt = $mysql->prepare("SELECT ba.*,se.timezone_fixx FROM `".$config->db_prefix."_bans` AS ba 
 				LEFT JOIN `".$config->db_prefix."_serverinfo` AS se ON ba.server_ip=se.address
-				WHERE `player_id`='".$steamid."' AND `expired`=1 AND `bid`<>".$bid) or die ($mysql->error);
+				WHERE `player_id`=? AND `expired`=1 AND `bid`<>?");
+	$stmt->bind_param("si", $steamid, $bid);
+	$stmt->execute();
+	$query = $stmt->get_result();
 	//Array aufbereiten
 	$ban_rows=array();
 	while($ban_row=$query->fetch_assoc()) {
@@ -370,10 +387,12 @@ function sql_get_ban_details_exp($steamid,&$count,$bid) {
 }
 function sql_get_ban_details_motd_exp($steamid,&$count) {
 	global $config, $mysql;
-	//exp bans for ID without $bid
-	$query = $mysql->query("SELECT ba.*,se.timezone_fixx FROM `".$config->db_prefix."_bans` AS ba 
+	$stmt = $mysql->prepare("SELECT ba.*,se.timezone_fixx FROM `".$config->db_prefix."_bans` AS ba 
 				LEFT JOIN `".$config->db_prefix."_serverinfo` AS se ON ba.server_ip=se.address
-				WHERE `player_id`='".$steamid."' AND `expired`=1 ORDER BY ban_created DESC") or die ($mysql->error);
+				WHERE `player_id`=? AND `expired`=1 ORDER BY ban_created DESC");
+	$stmt->bind_param("s", $steamid);
+	$stmt->execute();
+	$query = $stmt->get_result();
 	//Array aufbereiten
 	$ban_rows=array();
 	while($ban_row=$query->fetch_assoc()) {
@@ -418,7 +437,10 @@ function sql_get_comments_count_fail($repair=0) {
 }
 function sql_get_comments($bid,&$count) {
 	global $config, $mysql;
-	$query = $mysql->query("SELECT * FROM `".$config->db_prefix."_comments` WHERE `bid`=".$bid." ORDER BY `date` ASC") or die ($mysql->error);
+	$stmt = $mysql->prepare("SELECT * FROM `".$config->db_prefix."_comments` WHERE `bid`=? ORDER BY `date` ASC");
+	$stmt->bind_param("i", $bid);
+	$stmt->execute();
+	$query = $stmt->get_result();
 	//Array aufbereiten
 	$comments=array();
 	while($result = $query->fetch_object()) {
@@ -481,7 +503,10 @@ function sql_get_files_count_fail($repair=0) {
 }
 function sql_get_files($bid,&$count) {
 	global $config, $mysql;
-	$query = $mysql->query("SELECT * FROM `".$config->db_prefix."_files` WHERE `bid`=".$bid." ORDER BY `upload_time` ASC") or die ($mysql->error);
+	$stmt = $mysql->prepare("SELECT * FROM `".$config->db_prefix."_files` WHERE `bid`=? ORDER BY `upload_time` ASC");
+	$stmt->bind_param("i", $bid);
+	$stmt->execute();
+	$query = $stmt->get_result();
 	//Array aufbereiten
 	$files=array();
 	while($result = $query->fetch_object()) {
@@ -506,9 +531,12 @@ function sql_get_files($bid,&$count) {
 }
 function sql_get_search_amxadmins(&$amxadmins,&$nickadmins) {
 	global $config, $mysql;
-	$query = $mysql->query("SELECT `admin_id`,`admin_nick` FROM `".$config->db_prefix."_bans` GROUP BY `admin_id` ORDER BY `admin_nick`") or die ($mysql->error);	
+	$query = $mysql->query("SELECT `admin_id`,`admin_nick` FROM `".$config->db_prefix."_bans` GROUP BY `admin_id`, `admin_nick` ORDER BY `admin_nick`") or die ($mysql->error);	
 	while($result = $query->fetch_object()) {
-		$checkQry = $mysql->query("SELECT * FROM `".$config->db_prefix."_amxadmins` WHERE `steamid`='".$result->admin_id."' GROUP BY `steamid`") or die ($mysql->error);
+		$stmt = $mysql->prepare("SELECT * FROM `".$config->db_prefix."_amxadmins` WHERE `steamid`=?");
+		$stmt->bind_param("s", $result->admin_id);
+		$stmt->execute();
+		$checkQry = $stmt->get_result();
 		if( $checkQry->num_rows > 0 ) {
 			//-- Is Found
 			if($result->admin_id <> "")	$amxadmins[]=array("steam"=>$result->admin_id,"nick"=>html_safe($result->admin_nick));
@@ -521,7 +549,7 @@ function sql_get_search_amxadmins(&$amxadmins,&$nickadmins) {
 function sql_get_search_servers() {
 	global $config, $mysql;
 	$servers = array();
-	$query = $mysql->query("SELECT `server_ip`,`server_name` FROM `".$config->db_prefix."_bans` GROUP BY `server_ip` ORDER BY `server_name`") or die ($mysql->error);
+	$query = $mysql->query("SELECT `server_ip`,`server_name` FROM `".$config->db_prefix."_bans` GROUP BY `server_ip`,`server_name` ORDER BY `server_name`") or die ($mysql->error);
 	//Array aufbereiten
 	while($result = $query->fetch_object()) {
 		if($result->server_name=="website") {
@@ -543,7 +571,8 @@ function sql_get_search_reasons() {
 }
 function sql_get_search_bans($search,$active=1,&$count=0) {
 	global $config, $mysql;
-	$query = $mysql->query("SELECT * FROM `".$config->db_prefix."_bans` WHERE ".$search." AND `expired`=".(($active==1)?0:1)." ORDER BY `ban_created` DESC") or die ($mysql->error);
+	$expired = ($active==1) ? 0 : 1;
+	$query = $mysql->query("SELECT * FROM `".$config->db_prefix."_bans` WHERE ".$search." AND `expired`=".$expired." ORDER BY `ban_created` DESC") or die ($mysql->error);
 	//Array aufbereiten
 	
 	$ban_list = array();
@@ -606,6 +635,7 @@ function sql_get_bans_count($activ_only = TRUE) {
 }
 function sql_get_logs($filter) {
 	global $config, $mysql;
+	$where = "";
 	if($filter) $where="WHERE ".$filter;
 	$query = $mysql->query("SELECT * FROM `".$config->db_prefix."_logs` ".$where." ORDER BY `timestamp` DESC") or die ($mysql->error);
 	//Array aufbereiten

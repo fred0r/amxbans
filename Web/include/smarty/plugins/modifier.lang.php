@@ -19,6 +19,18 @@
 function smarty_modifier_lang($lang) {
 	//langkeys must start with "_", if not return unformated
 	//added for beta6
+	
+	if( is_array($lang) )
+	{
+		$retVal = array();
+		foreach( $lang as $langKey )
+		{
+			$retVal[] = smarty_modifier_lang($langKey);
+		}
+		return $retVal;
+	}
+	
+	
 	if(substr($lang,0,1)!="_") return $lang;
 	
 	global $config;
@@ -28,7 +40,7 @@ function smarty_modifier_lang($lang) {
 	$language = $_SESSION['lang'];
 	
 	//load lang keys to array if language changed
-	if($langkeys["current_language"]!=$language) {
+	if(!isset($langkeys["current_language"]) || $langkeys["current_language"]!=$language) {
 		//get all current langfiles
 		$all_lang_files=array();
 		chdir($lang_files_dir);
@@ -62,19 +74,45 @@ function smarty_modifier_lang($lang) {
 }
 function load_keys($item,$key) {
 	global $langkeys;
-	$lp = fopen($item,"r");
-	$temp = fread($lp, filesize($item));
-	fclose($lp); 
-	if ($lp)
-	{
-		$s_lang = explode("\n",$temp);
-		$int=sizeof($s_lang); 
-		for ($i=0;$i<$int;$i++) {
-			$s_lang[$i] = str_replace ("\n","",$s_lang[$i]);
-			$test = explode("\"",$s_lang[$i]);
-			$langkeys[$test[1]]=$test[3];
-		}	
+	
+	// PHP 8 Fix: Include the file to define constants, then extract them
+	// This is more reliable than parsing the file manually
+	$before_constants = get_defined_constants(true);
+	$include_result = include($item);
+	$after_constants = get_defined_constants(true);
+	
+	// Get only the newly defined constants from this file
+	$new_constants = array_diff_assoc($after_constants['user'], $before_constants['user']);
+	
+	// Add them to langkeys array
+	foreach ($new_constants as $const_name => $const_value) {
+		if (substr($const_name, 0, 1) === '_') {
+			$langkeys[$const_name] = $const_value;
+		}
 	}
-	@setlocale(LC_ALL, $langkeys["_LOCALE"]);
+	
+	// Also support the old parsing method as fallback
+	$lp = @fopen($item,"r");
+	if ($lp) {
+		$temp = @fread($lp, filesize($item));
+		@fclose($lp);
+		
+		if ($temp) {
+			$s_lang = explode("\n",$temp);
+			$int=sizeof($s_lang); 
+			for ($i=0;$i<$int;$i++) {
+				$s_lang[$i] = str_replace ("\n","",$s_lang[$i]);
+				$test = explode("\"",$s_lang[$i]);
+				if( isset($test[0]) && $test[0] == "define(" && isset($test[1]) && isset($test[3]) )
+				{
+					$langkeys[$test[1]]=$test[3];
+				}
+			}
+		}
+	}
+	
+	if (isset($langkeys["_LOCALE"])) {
+		@setlocale(LC_ALL, $langkeys["_LOCALE"]);
+	}
 }
 ?>

@@ -20,14 +20,17 @@
 
 */
 	
-	if(!$_SESSION["loggedin"]) {
-		die("access denied");
+	if(!$_SESSION["loggedin"] || $_SESSION['webadmins_edit']!="yes") {
+		header("Location:index.php");
+		exit;
 	}
 	
 	$admin_site="wa";
 	$title2 ="_TITLEWEBADMIN";
 	
-	$uid=(int)$_POST["uid"];
+	$input=array("name"=>"","level"=>"","email"=>"");
+
+	$uid = isset($_POST["uid"]) ? (int)$_POST["uid"] : 0;
 	//Levels holen
 	$levels=array();
 	$query = $mysql->query("SELECT `level` FROM `".$config->db_prefix."_levels` ORDER BY `level`") or die ($mysql->error);
@@ -38,7 +41,10 @@
 	
 	function checkAdmin($nickname, $email) {
 		global $config, $mysql;
-		$query = $mysql->query("SELECT * FROM `".$config->db_prefix."_webadmins` WHERE username='".$nickname."' OR email='".$email."'") or die ($mysql->error);
+		$stmt = $mysql->prepare("SELECT * FROM `".$config->db_prefix."_webadmins` WHERE username=? OR email=?");
+		$stmt->bind_param("ss", $nickname, $email);
+		$stmt->execute();
+		$query = $stmt->get_result();
 		if($query->num_rows) {
 			return true;
 		}
@@ -47,31 +53,31 @@
 	
 	if((isset($_POST["save"]) || isset($_POST["new"])) && $_SESSION['webadmins_edit']) {
 		$name=sql_safe($_POST["name"]);
-		if(!validate_value($name,"name",$error,4,31,"USERNAME")) $user_msg[]=$error;
+		if(!validate_value($name,"name",$error,4,31,"USERNAME")) $user_msg=$error;
 		$email=sql_safe($_POST["email"]);
-		if(!validate_value($email,"email",$error)) $user_msg[]=$error;
+		if(!validate_value($email,"email",$error)) $user_msg=$error;
 	}
 	//change pw
 	if(isset($_POST["setnewpw"]) && ($_SESSION['webadmins_edit'] || $_SESSION["uid"] == $uid)) {
 		$newpw=$_POST["newpw"];
-		if(!validate_value($newpw,"name",$error,4,31,"PASSWORD")) $user_msg[]=$error;
+		if(!validate_value($newpw,"name",$error,4,31,"PASSWORD")) $user_msg=$error;
 		#if($newpw != $_POST["newpw"]) $user_msg="_PASSWORDNOTVALID";
 		
 		if(!$user_msg) {
-			#echo "pw ".$newpw." wird gesetzt.";
-			$query = $mysql->query("UPDATE `".$config->db_prefix."_webadmins` SET 
-						`password`='".md5($newpw)."'
-						WHERE `id`=".$uid." LIMIT 1") or $user_msg="_PASSWORDCHANGEDFAILED";
+			$hashed_pw = password_hash($newpw, PASSWORD_BCRYPT);
+			$stmt = $mysql->prepare("UPDATE `".$config->db_prefix."_webadmins` SET `password`=? WHERE `id`=? LIMIT 1");
+			$stmt->bind_param("si", $hashed_pw, $uid);
+			$stmt->execute();
 			if(!$user_msg) {
 				log_to_db("Webadmin config","Edited user: ".html_safe($_POST["name"])." (id: ".$uid.") changed password");
-				$user_msg[]="_PASSWORDCHANGED";
+				$user_msg="Password changed";
 				//try to send an email to the user
 					$to = $_POST["email"];
 					$subject = 'AMXBans: Your login has changed';
 					$msg = 'Your Account has been changed from: '.$_SESSION["uname"].chr(10).chr(10).'Your username: '.$_POST["name"].chr(10).'Your new Password: '.$newpw;
 					$header = 'From: '.$_SESSION["email"] . "\r\n" .
 								'X-Mailer: PHP/' . phpversion();
-					if(mail($to, $subject, $msg, $header)) $user_msg[]="_EMAILSENT";
+					if(mail($to, $subject, $msg, $header)) $user_msg="Email Send";
 					
 				//if the own pw changed, logout
 				if($_SESSION["uname"]==$_POST["name"]) {
@@ -83,48 +89,45 @@
 	//Webadmin save
 	if(isset($_POST["save"]) && $_SESSION['webadmins_edit']) {
 		if(!$user_msg) {
-			$query = $mysql->query("UPDATE `".$config->db_prefix."_webadmins` SET 
-						`username`='".$name."',
-						`level`='".(int)$_POST["level"]."',
-						`email`='".$email."',
-						`logcode`='' 
-						WHERE `id`=".$uid." LIMIT 1") or die ($mysql->error);
-			$user_msg[]='_WADMINSAVED';
+			$stmt = $mysql->prepare("UPDATE `".$config->db_prefix."_webadmins` SET `username`=?, `level`=?, `email`=?, `logcode`='', `session_token`=NULL WHERE `id`=? LIMIT 1");
+			$stmt->bind_param("sisi", $name, $_POST["level"], $email, $uid);
+			$stmt->execute();
+			$user_msg='_WADMINSAVED';
 			log_to_db("Webadmin config","Edited user: ".html_safe($_POST["name"])." (id: ".$uid.")");
 		}
 	}
 	//Webadmin delete
 	if(isset($_POST["del"]) && $_SESSION['webadmins_edit']) {
-		$query = $mysql->query("DELETE FROM `".$config->db_prefix."_webadmins` WHERE `id`=".$uid." LIMIT 1") or die ($mysql->error);
-		$user_msg[]='_WADMINDELETED';
+		$stmt = $mysql->prepare("DELETE FROM `".$config->db_prefix."_webadmins` WHERE `id`=? LIMIT 1");
+		$stmt->bind_param("i", $uid);
+		$stmt->execute();
+		$user_msg='Admin Deleted';
 		log_to_db("Webadmin config","Deleted user: ".html_safe($_POST["name"]));
 	}
 	//Webadmin add
 	if(isset($_POST["new"]) && $_SESSION['webadmins_edit']) {
 		$pw=$_POST["pw"];
-		if(!validate_value($pw,"name",$error,4,31,"PASSWORD")) $user_msg[]=$error;
+		if(!validate_value($pw,"name",$error,4,31,"PASSWORD")) $user_msg=$error;
 		$pw2=sql_safe($_POST["pw2"]);
 		$level=(int)$_POST["level"];
 		
 		$input=array("name"=>$name,"level"=>$level,"email"=>$email);
-		$smarty->assign("input",$input);
 		
 		//Are passwords the same?
 		if($pw !== $pw2) {
-			$user_msg[]="_PASSWORDNOTMATCH";
+			$user_msg="_PASSWORDNOTMATCH";
 		}
 		if(checkAdmin($name, $email)) {
-			$user_msg[]="_WADMINADDEDFAILED";
+			$user_msg="_WADMINADDEDFAILED";
 		}
 		if(!$user_msg) {
-			//save webadmin to db
-			$query = $mysql->query("INSERT INTO `".$config->db_prefix."_webadmins` 
-						(`username`,`password`,`level`,`email`) 
-						VALUES 
-						('".$name."','".md5($pw)."','".$level."','".$email."')
-						") or $user_msg[]='_WADMINADDEDFAILED';#die ($mysql->error);
+			//save webadmin to db with bcrypt password
+			$hashed_pw = password_hash($pw, PASSWORD_BCRYPT);
+			$stmt = $mysql->prepare("INSERT INTO `".$config->db_prefix."_webadmins` (`username`,`password`,`level`,`email`) VALUES (?,?,?,?)");
+			$stmt->bind_param("ssis", $name, $hashed_pw, $level, $email);
+			$stmt->execute() or $user_msg='_WADMINADDEDFAILED';
 			if(!$user_msg) {
-				$user_msg[]='_WADMINADDED';
+				$user_msg = 'Admin Added';
 				log_to_db("User Level config","Added user: ".html_safe($_POST["name"])." (level ".$level.")");
 			}
 		}
@@ -132,6 +135,7 @@
 	//Webadmins holen
 	$users=sql_get_webadmins();
 	
+	$smarty->assign("input",$input);
 	$smarty->assign("users",$users);
 	$smarty->assign("levels",$levels);
 	

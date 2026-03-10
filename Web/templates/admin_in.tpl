@@ -385,6 +385,7 @@
 			<div class="section-content">
 
 				<form method="post">
+								<input type="hidden" name="csrf_token" value="{$csrf_token}">
 
 					<ul class="nice-list">
 
@@ -394,7 +395,8 @@
 
 							<div class="right">
 
-								<!--<form method="post" style="display:inline;">-->
+								<!--<form method="post" style="display:inline;">
+								<input type="hidden" name="csrf_token" value="{$csrf_token}">-->
 
 									<input type="submit" class="button" name="clear" value="{"_DELETE"|lang}" {if $smarty.session.websettings_edit != "yes"}disabled{/if}/>
 
@@ -416,7 +418,8 @@
 
 							<div class="right">
 
-								<!--<form method="post" style="display:inline;">-->
+								<!--<form method="post" style="display:inline;">
+								<input type="hidden" name="csrf_token" value="{$csrf_token}">-->
 
 									<!--<input type="submit" name="optimize" value="{"_OPTIMIZE"|lang}" {if $smarty.session.websettings_edit != "yes"}disabled{/if}>-->
 
@@ -436,7 +439,8 @@
 
 							<div class="right">
 
-								<!--<form method="post" style="display:inline;">-->
+								<!--<form method="post" style="display:inline;">
+								<input type="hidden" name="csrf_token" value="{$csrf_token}">-->
 
 									<!--<input type="submit" name="optimize" value="{"_PRUNE"|lang}" {if $smarty.session.websettings_edit != "yes"}disabled{/if}>-->
 

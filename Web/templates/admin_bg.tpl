@@ -58,28 +58,30 @@
 					<tr class="htable">
 						<td colspan="3"><b>{"_REASONSSETS"|lang}</b></td>
 					</tr>
-					{foreach from=$reasons_set item=reasons_set}
+					{foreach from=$reasons_set item=reason}
 						<form method="POST">
-							<input type="hidden" name="rsid" value="{$reasons_set.id}" />
+								<input type="hidden" name="csrf_token" value="{$csrf_token}">
+							<input type="hidden" name="rsid" value="{$reason.id}" />
 							<tr class="list">
 								<td>
-									{if $reasons_set.setname == ""}&nbsp;{else}{$reasons_set.setname}{/if}
+									{if $reason.setname == ""}&nbsp;{else}{$reason.setname}{/if}
 								</td>
 								<td align="center">
-									<input type="button" class="button" onclick="NewToggleLayer('layer_{$reasons_set.id}');" value="{"_EDIT"|lang}" />
+									<input type="button" class="button" onclick="NewToggleLayer('layer_{$reason.id}');" value="{"_EDIT"|lang}" />
 									<input type="submit" class="button" name="delset" value="{"_DEL"|lang}" {if $smarty.session.servers_edit !== "yes"}disabled{/if} />
 								</td>
 							</tr>
-							<tr id="layer_{$reasons_set.id}" style="display: none">
+							<tr id="layer_{$reason.id}" style="display: none">
 								<td colspan="3"><div style="display: none">
 									<table class="table_details" width="95%">
 										<form method="POST">
+								<input type="hidden" name="csrf_token" value="{$csrf_token}">
 											<tr class="htable">
 												<td colspan="4">{"_EDITSET"|lang}</td>
 											</tr>
 											<tr class="settings_line">
 												<td>{"_NAME"|lang}:</td>
-												<td><input type="text" name="setname" value="{$reasons_set.setname}" /></td>
+												<td><input type="text" name="setname" value="{$reason.setname}" /></td>
 												<td><input type="submit" class="button" name="saveset" value="{"_SAVESET"|lang}" {if $smarty.session.servers_edit !== "yes"}disabled{/if} /></td>
 											</tr>
 											<tr class="htable">
@@ -89,7 +91,7 @@
 												<tr class="settings_line">
 													<td>{$reasons[reasons].reason}</td>
 													<td>{$reasons[reasons].static_bantime}</td>
-													<td><input type="checkbox" name="aktiv[]" value="{$reasons[reasons].id}" {$reasons_set.reasonids|strinstr:",":$reasons[reasons].id:"checked"} /></td>
+													<td><input type="checkbox" name="aktiv[]" value="{$reasons[reasons].id}" {$reason.reasonids|strinstr:",":$reasons[reasons].id:"checked"} /></td>
 												</tr>
 											{/section}
 										</form>
@@ -102,6 +104,7 @@
 					<div class="clearer"></div>
 					<tr class="settings_line">
 						<form method="POST">
+								<input type="hidden" name="csrf_token" value="{$csrf_token}">
 							<td align="center"><input type="text" name="setname" value="" /></td>
 							<td align="center"><input type="submit" class="button" name="newset" value="{"_NEWSET"|lang}" {if $smarty.session.servers_edit !== "yes"}disabled{/if} /></td>
 						</form>
@@ -120,6 +123,7 @@
 					<tr>
 						{section name=reasons loop=$reasons}
 							<form method="POST">
+								<input type="hidden" name="csrf_token" value="{$csrf_token}">
 							<input type="hidden" name="rid" value="{$reasons[reasons].id}" />
 							<tr class="settings_line">
 								<td align="center"><input type="text" name="reason" value="{$reasons[reasons].reason}" /></td>
@@ -135,6 +139,7 @@
 					<tr><td colspan="3">&nbsp</td></tr>
 					<tr class="settings_line">
 						<form method="POST">
+								<input type="hidden" name="csrf_token" value="{$csrf_token}">
 							<td align="center"><input type="text" name="reason" value="" /></td>
 							<td align="center"><input type="text" name="static_bantime" value="" /></td>
 							<td align="center"><input type="submit" class="button" name="newreason" value="{"_NEWREASON"|lang}" {if $smarty.session.servers_edit !== "yes"}disabled{/if} /></td>

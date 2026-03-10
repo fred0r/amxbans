@@ -20,16 +20,19 @@
 
 */
 	
-	if(!$_SESSION["loggedin"]) {
+	if(!$_SESSION["loggedin"] || $_SESSION['bans_add']!="yes") {
 		header("Location:index.php");
-		#exit;
+		exit;
 	}
 
 	$admin_site="ban_add";
 	$title2 = "_TITLEBANADD";
 
+	$inputs=array("name"=>'',"steamid"=>'',"ip"=>'',"reason"=>'',"reason_custom"=>0,"length"=>0,"type"=>'');
+	$reason_custom = 0;
+
 	//save ban
-	if(isset($_POST["save"]) && $_SESSION["loggedin"]) {
+	if(isset($_POST["save"]) && $_SESSION["loggedin"] && $_SESSION['bans_add']=="yes") {
 		if(isset($_POST["reasoncheck"])=="yes") {
 			$reason=sql_safe(trim($_POST["user_reason"]));
 			$reason_custom=1;
@@ -45,7 +48,7 @@
 		}
 		if($ban_length < 0) $ban_length=0;
 		
-		$ban_type=$_POST["ban_type"];
+		$ban_type=in_array($_POST["ban_type"], array("S","SI")) ? $_POST["ban_type"] : "S";
 		$name=sql_safe(trim($_POST["name"]));
 		$steamid=sql_safe(trim($_POST["steamid"]));
 		$ip=sql_safe(trim($_POST["ip"]));
@@ -59,29 +62,41 @@
 		
 		//check if a activ ban exists
 		if(!$user_msg) {
-			$query = $mysql->query("SELECT * FROM `".$config->db_prefix."_bans` WHERE "
-						.(($steamid)?"`player_id`='".$steamid."'":"").
+			$stmt = $mysql->prepare("SELECT * FROM `".$config->db_prefix."_bans` WHERE "
+						.(($steamid)?"`player_id`=?":"").
 						(($steamid && $ip)?" AND ":"").
-						(($ip)?"`player_ip`='".$ip."'":"").
+						(($ip)?"`player_ip`=?":"").
 						" AND `expired`=0");
+			
+			if($steamid && $ip) {
+				$stmt->bind_param("ss", $steamid, $ip);
+			} elseif($steamid) {
+				$stmt->bind_param("s", $steamid);
+			} elseif($ip) {
+				$stmt->bind_param("s", $ip);
+			}
+			$stmt->execute();
+			$query = $stmt->get_result();
 			if($query->num_rows) $user_msg="_ACTIVBANEXISTS";
 		}
 		
 		//add the ban
 		if(!$user_msg) {
-			$query = $mysql->query("INSERT INTO `".$config->db_prefix."_bans` 
+			$stmt = $mysql->prepare("INSERT INTO `".$config->db_prefix."_bans` 
 					(`player_ip`,`player_id`,`player_nick`,`admin_nick`,`admin_id`,`ban_type`,`ban_reason`,`ban_created`,`ban_length`,`server_name`) 
 					VALUES 
-					('".$ip."','".$steamid."','".$name."','".$_SESSION["uname"]."','".$_SESSION["uname"]."','".$ban_type."','".$reason."',UNIX_TIMESTAMP(),'".$ban_length."','website')
-					") or die ($mysql->error);
+					(?, ?, ?, ?, ?, ?, ?, UNIX_TIMESTAMP(), ?, 'website')");
+			$stmt->bind_param("ssssssii", $ip, $steamid, $name, $_SESSION["uname"], $_SESSION["uname"], $ban_type, $reason, $ban_length);
+			$stmt->execute();
 			$user_msg='_BANADDSUCCESS';
 			log_to_db("Add ban","playernick: ".$name." / time: ".$ban_length);	
 		} else {
 			$inputs=array("name"=>$name,"steamid"=>$steamid,"ip"=>$ip,"reason"=>$reason,"reason_custom"=>$reason_custom,"length"=>$ban_length,"type"=>$ban_type);
-			$smarty->assign("inputs",$inputs);
 		}
 	}
-	
+
+	$smarty->assign("inputs",$inputs);
+
 	//get reasons
 	$reasons=sql_get_reasons_list();
 	$smarty->assign("reasons",$reasons);

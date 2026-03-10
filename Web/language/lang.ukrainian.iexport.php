@@ -34,6 +34,7 @@ define ( "_DBTABLE", "Таблиця з банамі");
 define ( "_CONCHECK", "Перевірити з'єднання");
 define ( "_SET", "Встановити");
 define ( "_ONLYPERMANENT", "тільки перманентні бани");
+define ( "_INCHISTORY","Also import expired bans (amx_banhistory)");
 define ( "_DELETELOCALTABLE", "видалити поточні бани перед імпортуванням");
 define ( "_SETALLNOTIMPORTED", "Відзначити всі бани як 'не імпортовані'");
 define ( "_INCLUDEREASON", "Включити причини банів");

@@ -34,6 +34,7 @@ define("_DBTABLE","Banu tabulu");
 define("_CONCHECK","Pārbaudiet savienojumu");
 define("_SET","Uzstādīt");
 define("_ONLYPERMANENT","Tikai bani uz neierobežotu laiku");
+define("_INCHISTORY","Also import expired bans (amx_banhistory)");
 define("_DELETELOCALTABLE","izdzēst esošos banus pirms importēšanas");
 define("_SETALLNOTIMPORTED","Uzstādīt visus banus kā 'neimportētie'");
 define("_INCLUDEREASON","Iekļautie iemesli");

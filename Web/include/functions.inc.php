@@ -59,7 +59,7 @@ function validate_value($value,$type = "name",&$msg = "",$minsize=1,$maxsize=31,
 			return true;
 			break;
 		case 'amxxaccess':
-			if(!preg_match("/^[a-u,z]{1,22}$/",$value)) { $msg="_ACCESSINVALID"; return false; }
+			if(!preg_match("/^[a-u,z]{1,22}$/i",$value)) { $msg="_ACCESSINVALID"; return false; }
 			return true;
 			break;
 		case 'amxxflags':
@@ -77,14 +77,26 @@ function validate_value($value,$type = "name",&$msg = "",$minsize=1,$maxsize=31,
 	return false;
 
 }
+function csrf_verify() {
+	if (!isset($_SESSION['csrf_token'])) {
+		$_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+		header('Location: ' . $_SERVER['PHP_SELF']);
+		exit;
+	}
+	if (!isset($_POST['csrf_token']) ||
+		!hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
+		http_response_code(403);
+		die("Invalid CSRF token.");
+	}
+}
 function sql_safe($value) {
 	global $mysql;
-	if (get_magic_quotes_gpc()) $value=stripslashes_recursive($value); //function in config.inc.php
+	$value=stripslashes_recursive($value); //function in config.inc.php
 	return $mysql->escape_string($value);
 }
 function html_safe($value) {
-	if (get_magic_quotes_gpc()) $value=stripslashes_recursive($value); //function in config.inc.php
-	return htmlentities($value, ENT_QUOTES);
+	$value=stripslashes_recursive($value); //function in config.inc.php
+	return is_string($value) ? htmlentities($value, ENT_QUOTES) : $value;
 }
 
 function _substr($str, $length, $minword = 3) {

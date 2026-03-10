@@ -34,6 +34,7 @@ define("_DBTABLE","封禁表");
 define("_CONCHECK","检查连接");
 define("_SET","Set");
 define("_ONLYPERMANENT","只有永久性封禁");
+define("_INCHISTORY","Also import expired bans (amx_banhistory)");
 define("_DELETELOCALTABLE","导入封禁前删除当前封禁");
 define("_SETALLNOTIMPORTED","禁止导入封禁'");
 define("_INCLUDEREASON","原因包含");

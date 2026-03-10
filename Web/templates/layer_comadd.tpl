@@ -4,11 +4,13 @@
 			<td colspan="2">
 				<table width="100%" class="table_details" border="1">
 					<form method="post">
+								<input type="hidden" name="csrf_token" value="{$csrf_token}">
 						<input type="hidden" name="bid" value="{$ban_detail.bid}" />
 						<input type="hidden" name="site" value="{$site}" />
 						<input type="hidden" name="details_x" value="1" />
 						<div id="add_comment" class="post">
 							<form method="post">
+								<input type="hidden" name="csrf_token" value="{$csrf_token}">
 								<table frame="box" rules="groups" summary=""> 
 									<thead> 
 										<tr> 
@@ -38,14 +40,14 @@
 										<tr>
 											<td class="vtop fat">{"_COMMENT"|lang}:</td>
 											<td>
-												{foreach from=$bbcodes item=bbcodes}
-													<a href="javascript:insertAtCaret('commentc', '{$bbcodes.0} {$bbcodes.1}');"><img border="0" src="images/icons/bbcode/{$bbcodes.2}" title="{$bbcodes.3}" /></a>
+												{foreach from=$bbcodes item=bbcode}
+													<a href="javascript:insertAtCaret('commentc', '{$bbcode.0} {$bbcode.1}');"><img border="0" src="images/icons/bbcode/{$bbcode.2}" title="{$bbcode.3}" /></a>
 												{/foreach}
 												<br />
 													<textarea name="comment" id="commentc" cols="50" rows="3" wrap="soft"></textarea>
 												<br />
-												{foreach from=$smilies item=smilies}
-													<a href="javascript:insertAtCaret('commentc', ' {$smilies.0} ');"><img border="0" src="images/icons/{$smilies.1}" title="{$smilies.2}" /></a>
+												{foreach from=$smilies item=smilie}
+													<a href="javascript:insertAtCaret('commentc', ' {$smilie.0} ');"><img border="0" src="images/icons/{$smilie.1}" title="{$smilie.2}" /></a>
 												{/foreach}
 											</td>
 										</tr>

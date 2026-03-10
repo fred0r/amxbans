@@ -31,8 +31,29 @@ ob_start();
 $modul_site="iexport";
 $title2="_TITLEIEXPORT";
 
+// Initialize Template Variables
+$dbdata = array(
+	"host" => "",
+	"user" => "",
+	"pass" => "",
+	"database" => "",
+	"table" => "",
+	"onlyperm" => false,
+	"inchistory" => false,
+	"dellocal" => false
+);
+$status = array(
+	"imported" => 0,
+	"failed" => 0,
+	"exported" => 0
+);
+$dbcheck="";
+$delcount = 0;
+$updatecount = 0;
+$backups = array();
+
 //download eines backups
-if(isset($_POST["dbdownfile"]) && $_SESSION["loggedin"]) {
+if(isset($_POST["dbdownfile"]) && $_SESSION["loggedin"] && $_SESSION["bans_export"] == "yes") {
 	$file=basename($_POST["localfile"]);
 	$filepath="include/backup/".$file;
 	if(!file_exists($filepath)) {
@@ -59,7 +80,7 @@ if(isset($_POST["dbdownfile"]) && $_SESSION["loggedin"]) {
 	}
 }
 //delete backup
-if(isset($_POST["delfile"]) && $_SESSION["loggedin"]) {
+if(isset($_POST["delfile"]) && $_SESSION["loggedin"] && $_SESSION["bans_export"] == "yes") {
 	$file=basename($_POST["localfile"]);
 	$filepath="include/backup/".$file;
 	if(file_exists($filepath) && is_file($filepath)) {
@@ -70,7 +91,7 @@ if(isset($_POST["delfile"]) && $_SESSION["loggedin"]) {
 	} else { $user_msg="_FILENOTFOUND"; }
 }
 //create db .sql backup
-if(isset($_POST["dbexp"]) && $_SESSION["loggedin"]) {
+if(isset($_POST["dbexp"]) && $_SESSION["loggedin"] && $_SESSION["bans_export"] == "yes") {
 	$type=(isset($_POST["structur"]))?true:false;
 	$droptable=(isset($_POST["droptable"]))?true:false;
 	$deleteall=(isset($_POST["deleteall"]))?true:false;
@@ -84,7 +105,7 @@ if(isset($_POST["dbexp"]) && $_SESSION["loggedin"]) {
 	$user_msg=db_backup($type,$droptable,$deleteall,$download,false);
 }
 //create bans .sql backup
-if(isset($_POST["dbbansexp"]) && $_SESSION["loggedin"]) {
+if(isset($_POST["dbbansexp"]) && $_SESSION["loggedin"] && $_SESSION["bans_export"] == "yes") {
 	$download=(isset($_POST["download"]))?true:false;
 	
 	# type: bool (true structure only)
@@ -106,17 +127,19 @@ if(isset($_POST["bancfgupl"]) && $_SESSION["loggedin"]) {
 		$user_msg="_NOREQUIREDFIELDS";
 	} else {
 		$date=(int)strtotime($date[2].$date[1].$date[0]);
-		$file=$mysql->escape_string($_FILES['filename']['name']);
+		$orig_file=$mysql->escape_string(basename($_FILES['filename']['name']));
 		$types=array("cfg","txt");
 		
-		if($file=="") {
+		if($orig_file=="") {
 			$user_msg="_FILENOFILE";
 		} else {
-			$file_type=substr(strrchr($file, '.'),1); 
+			$file_type=strtolower(substr(strrchr($orig_file, '.'),1)); 
 			if(!in_array($file_type,$types)) $user_msg="_FILETYPENOTALLOWED";
 		}
 		if($_FILES['filename']['size'] >= ($config->max_file_size*1024*1024)) $user_msg="_FILETOBIG";
 		if(!$user_msg) {
+			// Use a random filename so user-supplied names never reach the filesystem
+			$file = bin2hex(random_bytes(16)) . '.tmp';
 			if(!move_uploaded_file($_FILES['filename']['tmp_name'], "temp/".$file)) {
 				$user_msg="_FILEUPLOADFAIL";
 			} else {
@@ -174,7 +197,6 @@ if(isset($_POST["bancfgupl"]) && $_SESSION["loggedin"]) {
 				fclose($handle);
 				//del temp file
 				unlink("temp/".$file);
-				$smarty->assign("status",$status);
 			} 
 		}
 	}
@@ -198,7 +220,6 @@ if(isset($_POST["bancfgexp"]) && $_SESSION["loggedin"]) {
 		};
 		fclose($handle);
 		$user_msg="_EXPORTSUCCESS";
-		$smarty->assign("statusexport",$status);
 		if(file_exists($file) && $download) {
 			if(ini_get('zlib.output_compression')) 
 				ini_set('zlib.output_compression', 'Off');
@@ -226,9 +247,10 @@ if(isset($_POST["bandbcheck"]) && $_SESSION["loggedin"]) {
 	$dbdata["table"]=$mysql->escape_string($_POST["impdbtable"]);
 	$dbdata["onlyperm"]=(isset($_POST["onlyperm"]))?true:false;
 	$dbdata["dellocal"]=(isset($_POST["dellocal"]))?true:false;
+	$dbdata["inchistory"]=(isset($_POST["inchistory"]))?true:false;
 	//connect to db
 	$mysql2 = @new mysqli($dbdata["host"],$dbdata["user"],$dbdata["pass"], $dbdata["database"]);
-	if (mysqli_connect_errno()) $user_msg="_DBLOGINFAILED";
+	if ($mysql2->connect_errno) $user_msg="_DBLOGINFAILED";
 	if(!$user_msg) $query2 = @$mysql2->query("SELECT * FROM `".$dbdata["table"]."` WHERE `ban_length`=0") or $user_msg="_TABLESSELECTFAILED";
 	if(!$user_msg) {
 		$user_msg="_DBDATAOK";
@@ -251,11 +273,24 @@ if(isset($_POST["bandbimp"]) && $_SESSION["loggedin"]) {
 	$dbdata["table"]=$mysql->escape_string($_POST["impdbtable"]);
 	$dbdata["onlyperm"]=$onlyperm;
 	$dbdata["dellocal"]=$dellocal;
+	$dbdata["inchistory"]=(isset($_POST["inchistory"]))?true:false;
 	//connect to db for import
 	$mysql2 = @new mysqli($dbdata["host"],$dbdata["user"],$dbdata["pass"], $dbdata["database"]);
-	if (mysqli_connect_errno()) $user_msg="_DBLOGINFAILED";
+	if ($mysql2->connect_errno) $user_msg="_DBLOGINFAILED";
+
+	// Detect whether source table is amx_banhistory (has unban_created column)
+	$history = false;
+	if(!$user_msg) {
+		$cols = $mysql2->query("SHOW COLUMNS FROM `".$dbdata["table"]."` LIKE 'unban_created'");
+		if($cols && $cols->num_rows > 0) $history = true;
+	}
+
+	// Build WHERE clause: banhistory rows are always expired (no ban_length=0 filter needed there)
+	$where_clause = "";
+	if($onlyperm && !$history) $where_clause = " WHERE `ban_length`='0' OR `ban_length`=''";
+
 	//get all bans from table for import
-	if(!$user_msg) $query2 = @$mysql2->query("SELECT * FROM `".$dbdata["table"]."`".(($onlyperm)?" WHERE `ban_length`=0":"")." ORDER BY `ban_created` DESC") or $user_msg="_TABLESSELECTFAILED";
+	if(!$user_msg) $query2 = @$mysql2->query("SELECT * FROM `".$dbdata["table"]."`".$where_clause." ORDER BY `ban_created` DESC") or $user_msg="_TABLESSELECTFAILED";
 	
 	if(!$user_msg) {
 		$status["imported"]=0;
@@ -268,8 +303,7 @@ if(isset($_POST["bandbimp"]) && $_SESSION["loggedin"]) {
 			$user_msg="_LOCALTABLEDELETED";
 		}
 		while($result2 = $query2->fetch_object()) {
-			//is the table a 5.x history table?
-			if($result2->unban_created != "") {$history=true;}
+	
 			
 			if(!$dellocal) {
 				//search if the ban to import exists
@@ -310,7 +344,7 @@ if(isset($_POST["bandbimp"]) && $_SESSION["loggedin"]) {
 				'".$expired."',
 				'1')") or die ($mysql->error);
 			//if importing the history table save the edit details
-			if($history) {
+			if($history && $mysql2->insert_id) {
 				$insertid=$mysql->insert_id or die ($mysql->error);
 				$query3 = $mysql->query("INSERT INTO `{$config->db_prefix}_bans_edit` (`bid`,`edit_time`,`admin_nick`,`edit_reason`)
 					VALUES ('$insertid','{$result2->unban_created}','".$mysql->escape_string($result2->unban_admin_nick)."','".$mysql->escape_string($result2->unban_reason)."'") or die ($mysql->error);
@@ -318,7 +352,46 @@ if(isset($_POST["bandbimp"]) && $_SESSION["loggedin"]) {
 			if($query) $status["imported"]++;
 
 		}
-		$smarty->assign("status",$status);
+		// Second pass: import amx_banhistory (expired bans) if requested
+		if($import_ok && $dbdata["inchistory"] && !$history) {
+			$hist_table = preg_replace('/bans$/', 'banhistory', $dbdata["table"]);
+			$query_hist = @$mysql2->query("SELECT * FROM `".$hist_table."` ORDER BY `ban_created` DESC");
+			if($query_hist) {
+				while($result2 = $query_hist->fetch_object()) {
+					// Import expired bans from banhistory table
+					if($result2->player_id == "" && $result2->player_ip == "") { $status["failed"]++; continue; }
+					if(stristr($result2->player_id,"STEAM") === false && $result2->player_ip == "") { $status["failed"]++; continue; }
+					
+					$expired = 1; // History bans are always expired
+					
+					$query = $mysql->query("INSERT INTO `".$config->db_prefix."_bans` 
+						(`player_ip`,`player_id`,`player_nick`,`admin_ip`,`admin_id`,`admin_nick`,`ban_type`,`ban_reason`,`ban_created`,`ban_length`,`server_ip`,`server_name`,`expired`,`imported`) 
+						VALUES 
+						('".$result2->player_ip."',
+						'".$result2->player_id."',
+						'".$mysql->escape_string($result2->player_nick)."',
+						'".$result2->admin_ip."',
+						'".$result2->admin_id."',
+						'".$mysql->escape_string($result2->admin_nick)."',
+						'".$result2->ban_type."',
+						'".$mysql->escape_string($result2->ban_reason)."',
+						'".$result2->ban_created."',
+						'".$result2->ban_length."',
+						'".$result2->server_ip."',
+						'".$mysql->escape_string($result2->server_name)."',
+						'".$expired."',
+						'1')") or die ($mysql->error);
+					
+					if($mysql->insert_id && $result2->unban_created) {
+						$insertid = $mysql->insert_id;
+						$query3 = $mysql->query("INSERT INTO `{$config->db_prefix}_bans_edit` (`bid`,`edit_time`,`admin_nick`,`edit_reason`)
+							VALUES ('$insertid','{$result2->unban_created}','".$mysql->escape_string($result2->unban_admin_nick)."','".$mysql->escape_string($result2->unban_reason)."'") or die ($mysql->error);
+					}
+					
+					if($query) $status["imported"]++;
+				}
+			}
+		}
 	}
 	$smarty->assign("dbdata",$dbdata);
 }
@@ -331,8 +404,7 @@ if(isset($_POST["delimport"]) && $_SESSION["loggedin"]) {
 //set all to not imported
 if(isset($_POST["setnotimported"]) && $_SESSION["loggedin"]) {
 	$count=-1;
-	$query = $mysql->query("UPDATE `".$config->db_prefix."_bans` SET `imported`=0 WHERE `imported`=1") or die ($mysql->error);
-	$smarty->assign("updatecount",$mysql->affected_rows);
+		$query = $mysql->query("UPDATE `".$config->db_prefix."_bans` SET `imported`=0 WHERE `imported`=1") or die ($mysql->error);
 }
 //search backups
 $d=opendir($config->path_root."/include/backup/");

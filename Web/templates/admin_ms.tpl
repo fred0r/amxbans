@@ -57,6 +57,7 @@
 			<table width="95%" align="center"><tr><td>
 				<table border="1" width="100%">
 				<form method="POST">
+								<input type="hidden" name="csrf_token" value="{$csrf_token}">
 				<table>
 					<tr class="htable">
 						<td colspan="2"><b>{"_SYSTEMSETTINGS"|lang}</b></td>
@@ -189,6 +190,10 @@
 					<tr class="settings_line">
 						<td>{"_SHOWKICKCOUNT"|lang}</td>
 						<td><select name="show_kick_count" width="200">{html_options output=$yesno_select|lang values=$yesno_values selected=$vars.show_kick_count}</select></td>
+					</tr>
+					<tr class="settings_line">
+						<td>{"_DISPLAYADMINSPUBLICLY"|lang}</td>
+						<td><select name="show_admin_public" width="200">{html_options output=$yesno_select|lang values=$yesno_values selected=$vars.show_admin_public}</select></td>
 					</tr>
 				</table>
 				<div align="right"><input type="submit" class="button" name="save" value="{"_SAVE"|lang}" onclick="return confirm('{"_SAVESETTINGS"|lang}');" {if $smarty.session.websettings_edit !== "yes"}disabled{/if} /></div>

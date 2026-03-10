@@ -34,6 +34,7 @@ define("_DBTABLE","Bantabel");
 define("_CONCHECK","Tjek forbindelse");
 define("_SET","S&aelig;t");
 define("_ONLYPERMANENT","Kun permanente bans");
+define("_INCHISTORY","Also import expired bans (amx_banhistory)");
 define("_DELETELOCALTABLE","slet nuv&aelig;rende bans f&oslash;r importering");
 define("_SETALLNOTIMPORTED","S&aelig;t alle bans til 'ikke importeret'");
 define("_INCLUDEREASON","Medtag grunde");

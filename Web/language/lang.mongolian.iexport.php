@@ -34,6 +34,7 @@ define("_DBTABLE","Бан хүснэгт");
 define("_CONCHECK","Холболтыг шалга");
 define("_SET","Оноо");
 define("_ONLYPERMANENT","Зөвхөн хязгааргүй бануудыг");
+define("_INCHISTORY","Also import expired bans (amx_banhistory)");
 define("_DELETELOCALTABLE","Импрот хийхээс өмнө одоогын бануудыг устга");
 define("_SETALLNOTIMPORTED","Бүх баныг импротлоогүй болго");
 define("_INCLUDEREASON","Шлатгаан оруулах");

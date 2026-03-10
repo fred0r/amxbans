@@ -96,7 +96,7 @@ define("_NOSTEAMID","нема STEAM-ID");
 define("_STEAMID & IP","SteamID і/або IP");
 define("_HIDDEN","прихований");
 define("_INVOKED","Доданий");
-define("_BANLENGHT","Тривалість бану"),
+define("_BANLENGHT","Тривалість бану");
 define("_EXPIRES","Закінчується");
 define("_NOTAPPLICABLE","Ніколи");
 define("_ALREADYEXP","вже минув");
@@ -160,7 +160,7 @@ define("_SHOWINADMINLIST","Показувати в списку Адмінів")
 define("_ADMINVALIDITY","Термін адмінства");
 define("_ADMINEXPIRATION","Адмін до");
 define("_CREATED","Створений");
-define("_EXTENDWITH","продовжити"),
+define("_EXTENDWITH","продовжити");
 define("_STEAMIDIPNAME","SteamID / IP / Ім`я");
 // server
 define("_SERVERSETTINGS","Опції Сервера");
@@ -261,7 +261,7 @@ define("_SCODEENTER","Будь ласка введіть захисний код
 // update
 define("_WEBVERSIONINFO","Версія веб-сайту");
 define("_PLUGINVERSIONINFO","Версія модуля");
-define("_VERSION_CURRENT" "Поточна версія");
+define("_VERSION_CURRENT","Поточна версія");
 define("_VERSION_RELEASE","Остання версія");
 define("_VERSION_BETA","Поточна бета версія");
 define("_LASTCHANGELOG","Список змін"); 
@@ -294,7 +294,7 @@ define("_MENULOGS","Логи");
 define("_USERMENU","Меню користувача");
 define("_USERMENUSETTINGS","Параметри меню користувача");
 define("_MENULOGGEDIN","Користувач виконав вхід");
-define("_MENULOGGEDOUT","Користувач вийшов"),
+define("_MENULOGGEDOUT","Користувач вийшов");
 define("_POSITION","Місце");
 define("_LANGKEY1","Мова 1");
 define("_LANGKEY2","Мова 2");
@@ -350,7 +350,7 @@ define("_NEWBAN","Додати новий бан");
 define("_NOBANNAME","Ім'я не введено!");
 define("_ACTIVBANEXISTS","Активний бан вже є!");
 // messages
-define("_BANADDSUCCESS" "Бан успішно додано");
+define("_BANADDSUCCESS","Бан успішно додано");
 define("_BANEDITED","Бан збережено");
 define("_AMXADMINSAVESUCCESS","AMX Mod X Адміна успішно збережено");
 define("_AMXADMINDELETED","AMX Mod X Адміна видалено");
@@ -417,7 +417,7 @@ define("_GAMETYPE","Гра");
 define("_ANTICHEAT","Анти-чіт");
 define("_ADDONS","Аддони");
 define("_PROTOCOL","Протокол");
-define("_NOPLAYERS","Немає гравців"),
+define("_NOPLAYERS","Немає гравців");
 define("_PLAYERCONNECTING","Гравець з'єднується ...");
 define("_SERVEROFFLINE","Сервер недоступний");
 define("_REFRESH","Оновити");
@@ -428,7 +428,7 @@ define("_BANSETTINGS","Опції банів/кіків");
 define("_SHOW","Показати");
 define("_USERID","ID користувача");
 define("_STATUSNAME","Нік");
-define("_BOT","Бот"),
+define("_BOT","Бот");
 define("_PLAYER","Гравець");
 define("_HLTV","HLTV");
 define("_UNKNOWN","невідомо");

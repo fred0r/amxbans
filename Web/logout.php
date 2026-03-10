@@ -20,14 +20,18 @@
 
 */
 
-	session_start();
+	require_once("include/init_session.php");
 
 
 	include("include/config.inc.php");
 
 	setcookie($config->cookie,"delete",time()-(60*60*24*7),"",$_SERVER["HTTP_HOST"]);
 	
-	if(isset($_SESSION["uid"])) @$query = $mysql->query("UPDATE `".$config->db_prefix."_webadmins` SET `logcode`=NULL WHERE `id`=".(int)$_SESSION["uid"]) or die ($mysql->error);
+	if(isset($_SESSION["uid"])) {
+		$stmt = $mysql->prepare("UPDATE `".$config->db_prefix."_webadmins` SET `logcode`=NULL, `session_token`=NULL WHERE `id`=?");
+		$stmt->bind_param("i", $_SESSION["uid"]);
+		$stmt->execute();
+	}
 	
 	unset($_SESSION["uid"]);
 	unset($_SESSION["uname"]);
@@ -39,7 +43,7 @@
 	
 	$temp=$_SESSION["lang"];
 	session_destroy();
-	session_start();
+	require_once("include/init_session.php");
 	$_SESSION["lang"]=$temp;
 	
 	header("Location:index.php");

@@ -6,6 +6,7 @@
 			<tr><td colspan="2">
 					<table width="100%" class="table_details" border="1">
 						<form method="post">
+								<input type="hidden" name="csrf_token" value="{$csrf_token}">
 						<input type="hidden" name="site" value="{$site}" />
 						<input type="hidden" name="bid" value="{$ban_detail.bid}" />
 						<input type="hidden" name="details_x" value="1" />
@@ -30,15 +31,9 @@
 							<td><input type="test" size="40" id="id4" name="ban_reason" value="{$ban_detail.ban_reason}" {if $ban_detail.ban_length == -1}disabled{/if}/></td>
 						</tr>
 						<tr class="settings_line"><td><b>{"_BANLENGHT"|lang}:</b></td>
-							<td>{if $smarty.session.bans_unban == "yes" || ($smarty.session.bans_unban == "own" && $smarty.session.uname == $ban_detail.username)}
+							<td>{if isset($smarty.session.bans_unban) && ($smarty.session.bans_unban == "yes" || ($smarty.session.bans_unban == "own" && $smarty.session.uname == $ban_detail.username))}
 									<input type="test" size="10" id="id5" name="ban_length" value="{if $ban_detail.ban_length != -1}{$ban_detail.ban_length}{/if}"  {if $ban_detail.ban_length == -1}disabled{/if}/> {"_MINS"|lang}
-									<b><input type="checkbox" 
-										onclick="this.form.id0.disabled=this.checked;
-												this.form.id1.disabled=this.checked;
-												this.form.id2.disabled=this.checked;
-												this.form.id3.disabled=this.checked;
-												this.form.id4.disabled=this.checked;
-												this.form.id5.disabled=this.checked" name="unban"
+									<b><input type="checkbox" name="unban"
 												{if $ban_detail.ban_length == -1}checked{/if} /> {"_UNBANPLAYER"|lang}</b>
 								{else}
 									{$ban_detail.ban_length}
@@ -65,11 +60,11 @@
 							<td width="1%"><b>{"_ADMIN"|lang}</b></td>
 							<td><b>{"_EDITREASON"|lang}</b></td>
 						</tr>
-						{foreach from=$ban_details_edits item=ban_details_edits}
+						{foreach from=$ban_details_edits item=ban_detail_edit}
 						<tr class="settings_line">
-							<td nowrap>{$ban_details_edits.edit_time|date_format:"%d. %b %Y - %T"}</td>
-							<td nowrap>{$ban_details_edits.admin_nick}</td>
-							<td>{$ban_details_edits.edit_reason|bbcode2html}</td>
+							<td nowrap>{$ban_detail_edit.edit_time|date_format:"%d. %b %Y - %T"}</td>
+							<td nowrap>{$ban_detail_edit.admin_nick}</td>
+							<td>{$ban_detail_edit.edit_reason|bbcode2html}</td>
 						</tr>
 						{/foreach}
 					</table>

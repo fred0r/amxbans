@@ -34,6 +34,7 @@ define("_DBTABLE","Table des bans");
 define("_CONCHECK","V&eacute;rification de la connexion");
 define("_SET","Etablir");                               //need to check in context
 define("_ONLYPERMANENT","Uniquement les bans permanents");
+define("_INCHISTORY","Also import expired bans (amx_banhistory)");
 define("_DELETELOCALTABLE","effacer les bans actuels avant importation");
 define("_SETALLNOTIMPORTED","Mettre tous les bans en tant que 'non import&eacute;'");
 define("_INCLUDEREASON","Inclure les raisons");

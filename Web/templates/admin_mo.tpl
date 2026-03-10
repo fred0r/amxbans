@@ -68,6 +68,7 @@
 					</tr>
 					{section name=modules loop=$modules2 start=0 step=1}
 						<form name="form" method="POST">
+								<input type="hidden" name="csrf_token" value="{$csrf_token}">
 							<input type="hidden" name="mid" value="{$modules2[modules].id}" />
 							<input type="hidden" name="mname" value="{$modules2[modules].menuname}" />
 							<tr class="settings_line">

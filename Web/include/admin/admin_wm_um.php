@@ -20,8 +20,9 @@
 
 */
 
-if(!$_SESSION["loggedin"]) {
+if(!$_SESSION["loggedin"] || $_SESSION['websettings_edit']!="yes") {
 	header("Location:index.php");
+	exit;
 }
 
 $admin_site="um";
@@ -50,7 +51,7 @@ function menu_change_pos($mid,$pos,$pos_new) {
 	#log_to_db("Usermenu config","Changed menu: position ".$pos." -> ".$pos_new);
 }
 
-$mid=(int)$_POST["mid"];
+$mid = isset($_POST["mid"]) ? (int)$_POST["mid"] : 0;
 
 //delete menu
 if(isset($_POST["del"]) && $_SESSION["loggedin"]) {

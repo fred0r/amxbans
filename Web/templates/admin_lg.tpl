@@ -61,6 +61,7 @@
 							<td colspan="3"><b>{"_FILTER"|lang}</b></td>
 						</tr>
 						<form method="POST" name="sort">
+								<input type="hidden" name="csrf_token" value="{$csrf_token}">
 							<tr class="settings_line" colspan="3"><td>{"_USER"|lang}</td><td>{html_options name=username options=$usernames selected=$username_checked}</td></tr>
 							<tr class="settings_line" colspan="3">
 									<td>{"_ACTION"|lang}</td><td>{html_options name=action options=$actions selected=$action_checked}</td>
@@ -73,6 +74,7 @@
 							<td colspan="3"><b>{"_DELETE"|lang}</b></td>
 						</tr>
 						<form method="POST" name="clear">
+								<input type="hidden" name="csrf_token" value="{$csrf_token}">
 							<tr class="settings_line"><td>{"_ALL"|lang}</td><td width="1%"><input type="submit" class="button" name="delall" onclick="return confirm('{"_DELLOGSALL"|lang}{"_DATALOSS"|lang}');" value="{"_DELETE"|lang}" /></td></tr>
 							<tr class="settings_line"><td>{"_OLDERTHEN"|lang} <input type="text" size="3" name="days" > {"_DAYS"|lang}</td><td><input size="1" type="submit" class="button" name="delolder" onclick="return confirm('{"_DELLOGS"|lang}{"_DATALOSS"|lang}');" value="{"_DELETE"|lang}" /></td></tr>	
 						</form>
@@ -88,12 +90,12 @@
 							<td width="1%" align="center"><nobr>{"_ACTION"|lang}</nobr></td>
 							<td>{"_REMARKS"|lang}</td>
 						</tr>
-						{foreach from=$logs item=logs}
+						{foreach from=$logs item=log}
 							<tr class="list">
-								<td width="1%"><nobr>{$logs.timestamp|date_format:"%d.%m.%Y - %T"}</nobr></td>
-								<td width="1%" align="center">{$logs.username|escape}</td>
-								<td width="1%" align="center"><nobr>{$logs.action|escape}</nobr></td>
-								<td>{$logs.remarks|escape}</td>
+								<td width="1%"><nobr>{$log.timestamp|date_format:"%d.%m.%Y - %T"}</nobr></td>
+								<td width="1%" align="center">{$log.username|escape}</td>
+								<td width="1%" align="center"><nobr>{$log.action|escape}</nobr></td>
+								<td>{$log.remarks|escape}</td>
 							</tr>
 						{/foreach}
 					</table>

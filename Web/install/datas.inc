@@ -51,17 +51,18 @@ $usermenu_query="INSERT INTO `".$_SESSION["dbprefix"]."_usermenu` (`id`, `pos`, 
 //_webconfig
 $websettings_query="INSERT INTO `".$_SESSION["dbprefix"]."_webconfig` (`id`, `cookie`, `bans_per_page`, `design`, `banner`, `banner_url`, `default_lang`, `start_page`,
 					`show_comment_count`, `show_demo_count`, `show_kick_count`, `demo_all`, `comment_all`, `use_capture`, `max_file_size`,
-					`file_type`, `auto_prune`, `use_demo`, `use_comment`) VALUES
-					(1, 'amxbans', 50, 'default', 'amxbans.png', 'http://www.amxbans.net', 'english', 'view.php', 1, 1, 1, 0, 0, 1, 2, 'dem,zip,rar,jpg,gif,png', 0, 1, 1)";
+					`file_type`, `auto_prune`, `use_demo`, `use_comment`, `show_admin_public`) VALUES
+					(1, 'amxbans', 50, 'default', 'amxbans.png', 'http://www.amxbans.net', 'english', 'view.php', 1, 1, 1, 0, 0, 1, 2, 'dem,zip,rar,jpg,gif,png', 0, 1, 1, 0)";
 //_userlevel
 $userlevel_query="INSERT INTO `".$_SESSION["dbprefix"]."_levels` (`level`, `bans_add`, `bans_edit`, `bans_delete`, `bans_unban`, `bans_import`, `bans_export`,
 					`amxadmins_view`, `amxadmins_edit`, `webadmins_view`, `webadmins_edit`, `websettings_view`, `websettings_edit`, `permissions_edit`, `prune_db`,
 					`servers_edit`, `ip_view`) VALUES
 					(1, 'yes', 'yes', 'yes', 'yes', 'yes', 'yes', 'yes', 'yes', 'yes', 'yes', 'yes', 'yes', 'yes', 'yes', 'yes', 'yes')";
 //_webadmins
+$adminpass_hash = password_hash($_SESSION["adminpass"], PASSWORD_BCRYPT);
 $webadmin_query="INSERT INTO `".$_SESSION["dbprefix"]."_webadmins` (`id`, `username`, `password`, `level`, `email`) VALUES
 					(1, '".$mysql->escape_string($_SESSION["adminuser"])."', 
-					MD5('".$_SESSION["adminpass"]."'), 
+					'".$mysql->escape_string($adminpass_hash)."', 
 					1, 
 					'".$mysql->escape_string($_SESSION["adminemail"])."')";
 //_logs

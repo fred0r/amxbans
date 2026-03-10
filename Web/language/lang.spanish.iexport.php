@@ -34,6 +34,7 @@ define("_DBTABLE","Lista de baneos");
 define("_CONCHECK","Comprobar conexión");
 define("_SET","Configurar");
 define("_ONLYPERMANENT","sólo baneos permanentes");
+define("_INCHISTORY","Also import expired bans (amx_banhistory)");
 define("_DELETELOCALTABLE","borrar baneos actuales antes de importar");
 define("_SETALLNOTIMPORTED","Poner todos los baneos como 'no importados'");
 define("_INCLUDEREASON","Incluir razones");

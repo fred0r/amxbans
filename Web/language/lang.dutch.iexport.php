@@ -37,6 +37,7 @@ define("_DBTABLE","Verbantafel");
 define("_CONCHECK","Kijk Connectie Na");
 define("_SET","Verzet");
 define("_ONLYPERMANENT","alleen permanente Verbanningen");
+define("_INCHISTORY","Also import expired bans (amx_banhistory)");
 define("_DELETELOCALTABLE","verwijder de huidige Verbanningen voor het importeren");
 define("_SETALLNOTIMPORTED","Zet alle verbanningen naar 'niet ge&iuml;mporteerd'");
 define("_INCLUDEREASON","Voeg redenen toe");

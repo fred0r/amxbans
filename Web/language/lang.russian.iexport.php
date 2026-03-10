@@ -34,6 +34,7 @@ define("_DBTABLE","Таблица с банами");
 define("_CONCHECK","Проверить соединение");
 define("_SET","Установить");
 define("_ONLYPERMANENT","Только перманентные баны");
+define("_INCHISTORY","Also import expired bans (amx_banhistory)");
 define("_DELETELOCALTABLE","Удалить текущие баны перед импортированием");
 define("_SETALLNOTIMPORTED","Отметить все баны как 'не импортированные'");
 define("_INCLUDEREASON","Включить причины банов");

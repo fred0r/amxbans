@@ -20,15 +20,19 @@
 
 */
 	
-	if(!$_SESSION["loggedin"]) {
+	if(!$_SESSION["loggedin"] || $_SESSION['servers_edit']!="yes") {
 		header("Location:index.php");
+		exit;
 	}
 	require_once("include/rcon_hl_net.inc");
 	
 	$admin_site="sv";
 	$title2 ="_TITLESERVER";
+	$smsg = "";
+	$denied = false;
+	$hide_response = false;
 	
-	$sid=(int)$_POST["sid"];
+	$sid = isset($_POST["sid"]) ? (int)$_POST["sid"] : 0;
 	
 	//rcon function to send and receive
 	function rcon_send($command,$sid,$max_response_pages=0) {
@@ -104,7 +108,6 @@
 					`rcon`='".sql_safe($_POST["rcon"])."',
 					`amxban_motd`='".sql_safe($_POST["amxban_motd"])."',
 					`motd_delay`='".(int)$_POST["motd_delay"]."',
-					`amxban_menu`='".(int)$_POST["amxban_menu"]."',
 					`reasons`='".(int)$_POST["reasons"]."',
 					`timezone_fixx`='".(int)$_POST["timezone_fixx"]."'
 					WHERE `id`=".$sid." LIMIT 1") or die ($mysql->error);

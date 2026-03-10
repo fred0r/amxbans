@@ -73,6 +73,7 @@
 					</tr>
 					{section name=menu loop=$menu2 start=0 step=1}
 						<form name="form" method="POST">
+								<input type="hidden" name="csrf_token" value="{$csrf_token}">
 							<input type="hidden" name="mid" value="{$menu2[menu].id}" />
 							<input type="hidden" name="pos" value="{$smarty.section.menu.index}" />
 							<tr>
@@ -104,6 +105,7 @@
 				</table>
 				{if $smarty.session.websettings_edit == "yes"}
 					<form method="POST">
+								<input type="hidden" name="csrf_token" value="{$csrf_token}">
 						<input type="hidden" name="pos" value="{$menu_count}" />
 						<table width="50%" align="center">
 							<tr class="htable">

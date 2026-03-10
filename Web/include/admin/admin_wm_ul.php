@@ -20,16 +20,17 @@
 
 */
 	
-	if(!$_SESSION["loggedin"]) {
+	if(!$_SESSION["loggedin"] || $_SESSION['permissions_edit']!="yes") {
 		header("Location:index.php");
+		exit;
 	}
 	
 	$admin_site="ul";
 	$title2 ="_TITLEUSERLEVEL";
 	
-	$lid=(int)$_POST["lid"];
+	$lid = isset($_POST["lid"]) ? (int)$_POST["lid"] : 0;
 	//Level add
-	if(isset($_POST["new"]) && $_SESSION["loggedin"]) {
+	if(isset($_POST["new"]) && $_SESSION["loggedin"] && $_SESSION['permissions_edit']=="yes") {
 		$query = $mysql->query("SELECT COUNT(level) FROM `".$config->db_prefix."_levels`") or die ($mysql->error);
 		$level_count=$query->fetch_row()[0];
 		$query = $mysql->query("INSERT INTO `".$config->db_prefix."_levels` (`level`) VALUES (".($level_count+1).")") or die ($mysql->error);
@@ -37,7 +38,7 @@
 		log_to_db("User Level config","Added new level ".($level_count+1));
 	}
 	//Level del
-	if(isset($_POST["del"]) && $_SESSION["loggedin"]) {
+	if(isset($_POST["del"]) && $_SESSION["loggedin"] && $_SESSION['permissions_edit']=="yes") {
 		//check if webusers with this level exists
 		$query = $mysql->query("SELECT COUNT(id) FROM `".$config->db_prefix."_webadmins` WHERE `level`=".$lid) or die ($mysql->error);
 		$count=$query->fetch_row()[0];
@@ -51,31 +52,37 @@
 		}
 	}
 	//Level save
-	if(isset($_POST["save"]) && $_SESSION["loggedin"]) {
+	if(isset($_POST["save"]) && $_SESSION["loggedin"] && $_SESSION['permissions_edit']=="yes") {
+		//validate input values - only allow yes/no/own
+		$pv = function($v, $allowed) { return in_array($v, $allowed) ? $v : $allowed[1]; };
+		$yn = array("yes","no");
+		$yno = array("yes","no","own");
 		
 		$query = $mysql->query("UPDATE `".$config->db_prefix."_levels` SET 
-				`bans_add`='".$mysql->escape_string($_POST["bans_add"])."',
-				`bans_edit`='".$mysql->escape_string($_POST["bans_edit"])."',
-				`bans_delete`='".$mysql->escape_string($_POST["bans_delete"])."',
-				`bans_unban`='".$mysql->escape_string($_POST["bans_unban"])."',
-				`bans_import`='".$mysql->escape_string($_POST["bans_import"])."',
-				`bans_export`='".$mysql->escape_string($_POST["bans_export"])."',
-				`amxadmins_view`='".$mysql->escape_string($_POST["amxadmins_view"])."',
-				`amxadmins_edit`='".$mysql->escape_string($_POST["amxadmins_edit"])."',
-				`webadmins_view`='".$mysql->escape_string($_POST["webadmins_view"])."',
-				`webadmins_edit`='".$mysql->escape_string($_POST["webadmins_edit"])."',
-				`websettings_view`='".$mysql->escape_string($_POST["websettings_view"])."',
-				`websettings_edit`='".$mysql->escape_string($_POST["websettings_edit"])."',
-				`permissions_edit`='".$mysql->escape_string($_POST["permissions_edit"])."',
-				`prune_db`='".$mysql->escape_string($_POST["prune_db"])."',
-				`servers_edit`='".$mysql->escape_string($_POST["servers_edit"])."',
-				`ip_view`='".$mysql->escape_string($_POST["ip_view"])."' 
+				`bans_add`='".$pv($_POST["bans_add"],$yno)."',
+				`bans_edit`='".$pv($_POST["bans_edit"],$yno)."',
+				`bans_delete`='".$pv($_POST["bans_delete"],$yno)."',
+				`bans_unban`='".$pv($_POST["bans_unban"],$yn)."',
+				`bans_import`='".$pv($_POST["bans_import"],$yn)."',
+				`bans_export`='".$pv($_POST["bans_export"],$yn)."',
+				`amxadmins_view`='".$pv($_POST["amxadmins_view"],$yn)."',
+				`amxadmins_edit`='".$pv($_POST["amxadmins_edit"],$yn)."',
+				`webadmins_view`='".$pv($_POST["webadmins_view"],$yn)."',
+				`webadmins_edit`='".$pv($_POST["webadmins_edit"],$yn)."',
+				`websettings_view`='".$pv($_POST["websettings_view"],$yn)."',
+				`websettings_edit`='".$pv($_POST["websettings_edit"],$yn)."',
+				`permissions_edit`='".$pv($_POST["permissions_edit"],$yn)."',
+				`prune_db`='".$pv($_POST["prune_db"],$yn)."',
+				`servers_edit`='".$pv($_POST["servers_edit"],$yn)."',
+				`ip_view`='".$pv($_POST["ip_view"],$yn)."' 
 				WHERE `level`=".$lid." LIMIT 1") or die ($mysql->error);
 	
 		$user_msg="_LEVELSAVED";
 		
 		//logout all users with this level
-		$query = $mysql->query("UPDATE `".$config->db_prefix."_webadmins` SET `logcode`='' WHERE `level`=".$lid) or die ($mysql->error);
+		$stmt = $mysql->prepare("UPDATE `".$config->db_prefix."_webadmins` SET `logcode`='', `session_token`=NULL WHERE `level`=?");
+		$stmt->bind_param("i", $lid);
+		$stmt->execute();
 		//same level from current user, logout
 		if($_SESSION["level"]==$lid) {
 			session_destroy();

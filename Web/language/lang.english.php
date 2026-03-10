@@ -216,6 +216,7 @@ define("_STARTPAGE","Start page");
 define("_SHOWCOMMENTSCOUNT","Show number of comments");
 define("_SHOWFILESCOUNT","Show number of files");
 define("_SHOWKICKCOUNT","Show number of kicks");
+define("_DISPLAYADMINSPUBLICLY","Display admins publicly");
 define("_FILE_USERUPLOADALLOWED","Users are allowed to upload files");
 define("_MAXFILESIZE","max. File size");
 define("_FILE_ALLOWEDTYPES","Allowed file extensions");
@@ -429,7 +430,7 @@ define("_SHOW","Show");
 define("_USERID","User ID");
 define("_STATUSNAME","Status name");
 define("_BOT","Bot");
-define("_PLAYER","Player");
+// define("_PLAYER","Player"); // REMOVED - duplicate of line 65
 define("_HLTV","HLTV");
 define("_UNKNOWN","Unknown");
 define("_BAN","Ban");
